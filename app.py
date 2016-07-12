@@ -4,7 +4,6 @@ from aiohttp import web
 
 from auto import tasks as auto_tasks
 
-
 async def test(i=0):
     while True:
         i += 1
