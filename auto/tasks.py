@@ -1,11 +1,15 @@
 import aiohttp
 import asyncio
-import asyncio_redis
 import json
 
+from aiopg.sa import create_engine
 from functools import wraps
+from psycopg2 import IntegrityError
 
 from auto import settings
+from auto.connection import get_connection
+from auto.models import AutoBrand
+from auto.parsers import get_parsers
 
 
 api_url = lambda method: 'http://api.auto.ria.com' + method
@@ -34,10 +38,16 @@ async def sync_categories(connection, response):
 
 
 async def sync_data():
-    connection = await asyncio_redis.Connection.create(**settings.REDIS_CONNECTION)
-    with aiohttp.ClientSession() as session:
-        print(await sync_categories(connection, session))
-    connection.close()
+    async with create_engine(**settings.DATABASE) as engine:
+        async with engine.acquire() as connection:
+            for parser in get_parsers():
+                async for adv in parser:
+                    print(adv)
+            # try:
+            #     await connection.execute(AutoBrand.__table__.insert().values(name='BMW'))
+            # except IntegrityError as e:
+            #     print(e)
+            #     pass
 
 
 async def sync_data_task():

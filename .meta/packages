@@ -1,6 +1,6 @@
 aiohttp==0.21.6
+aiopg==0.10.0
 alembic==0.8.6
-asyncio-redis==0.14.2
 chardet==2.3.0
 Mako==1.0.4
 MarkupSafe==0.23

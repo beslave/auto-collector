@@ -1,6 +1,8 @@
 SYNC_TIMEOUT = 10
-REDIS_CONNECTION = {
+DATABASE = {
     'host': 'localhost',
-    'port': 6379,
-    'db': 1,
+    'port': 5432,
+    'database': 'auto_collector',
+    'user': 'postgres',
+    'password': 'p0stgres',
 }

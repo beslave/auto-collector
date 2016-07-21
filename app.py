@@ -4,6 +4,7 @@ from aiohttp import web
 
 from auto import tasks as auto_tasks
 
+
 async def test(i=0):
     while True:
         i += 1
@@ -15,6 +16,7 @@ async def hello(request):
     name = request.match_info.get('name') or'Anonymous'
     text = 'Hello, ' + name.capitalize()
     return web.Response(body=text.encode('utf-8'))
+
 
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop)
