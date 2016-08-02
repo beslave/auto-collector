@@ -1,18 +1,26 @@
 import sqlalchemy as sa
 
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
 
 
 Base = declarative_base()
 
 
 class BaseBrand:
-    id = sa.Column(sa.Integer, primary_key=True)
-    name = sa.Column(sa.String)
+    id = sa.Column(
+        sa.Integer,
+        primary_key=True,
+    )
+    name = sa.Column(
+        sa.String,
+    )
 
 
 class BaseModel:
-    id = sa.Column(sa.Integer, primary_key=True)
+    id = sa.Column(
+        sa.Integer,
+        primary_key=True,
+    )
     name = sa.Column(sa.String)
 
 
@@ -24,13 +32,25 @@ class BaseComplectation:
 class BaseAdvertisement:
     id = sa.Column(sa.Integer, primary_key=True)
 
+    name = sa.Column(sa.String)
     is_new = sa.Column(sa.Boolean)
     year = sa.Column(sa.Integer)
     price = sa.Column(sa.Integer)
 
 
-class WithOriginMixin:
-    origin = sa.Column(sa.String, index=True)
+def WithOrigin(RealModel):
+    class _WithOrigin:
+        origin = sa.Column(sa.String, index=True)
+
+        @declared_attr
+        def real_instance(cls):
+            return sa.Column(
+                sa.Integer,
+                sa.ForeignKey(RealModel.id),
+                nullable=True,
+            )
+
+    return _WithOrigin
 
 
 class Brand(BaseBrand, Base):
@@ -41,7 +61,11 @@ class Brand(BaseBrand, Base):
 
 
 class Model(BaseModel, Base):
-    brand_id = sa.Column(sa.Integer, sa.ForeignKey(Brand.id), nullable=False)
+    brand_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey(Brand.id),
+        nullable=False,
+    )
 
     __tablename__ = 'auto_model'
     __table_args__ = (
@@ -50,7 +74,11 @@ class Model(BaseModel, Base):
 
 
 class Complectation(BaseComplectation, Base):
-    model_id = sa.Column(sa.Integer, sa.ForeignKey(Model.id), nullable=False)
+    model_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey(Model.id),
+        nullable=False,
+    )
 
     __tablename__ = 'auto_complectation'
     __table_args__ = (
@@ -61,37 +89,63 @@ class Complectation(BaseComplectation, Base):
 class Advertisement(BaseAdvertisement, Base):
     __tablename__ = 'auto_advertisement'
 
-    model_id = sa.ForeignKey(Model.id)
-    complectation_id = sa.ForeignKey(Complectation.id)
+    model_id = sa.Column(sa.Integer, sa.ForeignKey(Model.id), nullable=False)
+    complectation_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey(Complectation.id),
+        nullable=True,
+    )
 
 
-class OriginBrand(BaseBrand, WithOriginMixin, Base):
+class OriginBrand(BaseBrand, WithOrigin(Brand), Base):
     __tablename__ = 'auto_originbrand'
     __table_args__ = (
         sa.UniqueConstraint('origin', 'name', name='origin_name_uc'),
     )
 
 
-class OriginModel(BaseModel, WithOriginMixin, Base):
-    brand_id = sa.Column(sa.Integer, sa.ForeignKey(OriginBrand.id), nullable=False)
+class OriginModel(BaseModel, WithOrigin(Model), Base):
+    brand_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey(OriginBrand.id),
+        nullable=False,
+    )
 
     __tablename__ = 'auto_originmodel'
     __table_args__ = (
-        sa.UniqueConstraint('origin', 'name', 'brand_id', name='origin_name_brand_uc'),
+        sa.UniqueConstraint(
+            'origin', 'name', 'brand_id',
+            name='origin_name_brand_uc'
+        ),
     )
 
 
-class OriginComplectation(BaseComplectation, WithOriginMixin, Base):
-    model_id = sa.Column(sa.Integer, sa.ForeignKey(OriginModel.id), nullable=False)
+class OriginComplectation(BaseComplectation, WithOrigin(Complectation), Base):
+    model_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey(OriginModel.id),
+        nullable=False,
+    )
 
     __tablename__ = 'auto_origincomplectation'
     __table_args__ = (
-        sa.UniqueConstraint('origin', 'name', 'model_id', name='origin_name_model_uc'),
+        sa.UniqueConstraint(
+            'origin', 'name', 'model_id',
+            name='origin_name_model_uc'
+        ),
     )
 
 
-class OriginAdvertisement(BaseAdvertisement, WithOriginMixin, Base):
+class OriginAdvertisement(BaseAdvertisement, WithOrigin(Advertisement), Base):
     __tablename__ = 'auto_originadvertisement'
 
-    model_id = sa.ForeignKey(Model.id)
-    complectation_id = sa.ForeignKey(OriginComplectation.id)
+    model_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey(OriginModel.id),
+        nullable=False,
+    )
+    complectation_id = sa.Column(
+        sa.Integer,
+        sa.ForeignKey(OriginComplectation.id),
+        nullable=True,
+    )
