@@ -42,6 +42,9 @@ def WithOrigin(RealModel):
     class _WithOrigin:
         origin = sa.Column(sa.String, index=True)
 
+        created_at = sa.Column(sa.DateTime(timezone=False))
+        updated_at = sa.Column(sa.DateTime(timezone=False))
+
         @declared_attr
         def real_instance(cls):
             return sa.Column(

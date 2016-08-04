@@ -7,7 +7,6 @@ from functools import wraps
 from psycopg2 import IntegrityError
 
 from auto import settings
-from auto.connection import get_connection
 from auto.parsers import get_parsers
 
 
@@ -40,17 +39,11 @@ async def sync_data():
     async with create_engine(**settings.DATABASE) as engine:
         async with engine.acquire() as connection:
             for parser in get_parsers():
-                await parser.prepare(connection)
-                async for adv in parser:
-                    pass
-            # try:
-            #     await connection.execute(AutoBrand.__table__.insert().values(name='BMW'))
-            # except IntegrityError as e:
-            #     print(e)
-            #     pass
+                await parser.parse(connection)
 
 
 async def sync_data_task():
     while True:
+        print('{:=^40}'.format(' SYNC DATA '))
         await sync_data()
         await asyncio.sleep(settings.SYNC_TIMEOUT)

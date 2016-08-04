@@ -3,14 +3,16 @@ import aiohttp
 import json
 
 from bs4 import BeautifulSoup
+from datetime import datetime
 from psycopg2 import IntegrityError
 
 from auto.models import (
-    OriginAdvertisement,
     OriginBrand,
     OriginComplectation,
     OriginModel,
 )
+
+from .advertisement_parser import AdvertisementParser
 
 
 class Parser(object):
@@ -19,67 +21,108 @@ class Parser(object):
     BRANDS_URL = 'https://api.auto.ria.com/categories/1/marks'
     BRAND_MODELS_URL = 'https://api.auto.ria.com/categories/1/marks/{brand}/models'
 
-    def __init__(self):
-        self.current_page_url = self.BASE_LIST_PAGE
-        self.number = 0
-        self.adv_iterator = None
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, '__instance__'):
+            cls.__instance__ = super().__new__(cls, *args, **kwargs)
+        return cls.__instance__
+
+    def __init__(self, *args, **kwargs):
+        self.parser = AdvertisementParser(self.NAME)
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.parser.run())
+
+    async def parse(self, connection):
+        brands = await self.prepare(connection)
+        await self.parse_advertisements()
+
+    async def parse_advertisements(self):
+        page_url = self.BASE_LIST_PAGE
+        with aiohttp.ClientSession() as session:
+            while page_url:
+                with aiohttp.Timeout(100):
+                    async with session.get(page_url) as response:
+                        page_url = None
+                        list_html = await response.read()
+                        soup = BeautifulSoup(list_html, 'html.parser')
+
+                        for adv_data in self.iter_advertisements(soup):
+                            self.parser.provide_data(adv_data)
+
+                        next_link = soup.select('.pagination .show-more.fl-r')
+                        if next_link:
+                            next_page = next_link[0].attrs['page']
+                            page_url = self.BASE_LIST_PAGE + '&page=' + next_page
+
 
     async def prepare(self, connection):
-        self.connection = connection
+        brands = {}
         with aiohttp.ClientSession() as session:
             async with session.get(self.BRANDS_URL) as response:
                 brands_json = await response.read()
 
                 for brand in json.loads(brands_json.decode('utf-8')):
-                    await self.prepare_brand(session, brand)
+                    brand_id, brand_data = await self.prepare_brand(connection, session, brand)
+                    brands[brand_id] = brand_data
 
-    async def prepare_brand(self, session, data):
+        return brands
+
+    async def prepare_brand(self, connection, session, data):
+        models = {}
         try:
-            await self.connection.execute(
+            await connection.execute(
                 OriginBrand.__table__.insert().values(
                     origin=self.NAME,
                     id=data['value'],
                     name=data['name'],
+                    created_at=datetime.now(),
+                    updated_at=datetime.now(),
                 )
             )
         except IntegrityError as e:
-            await self.connection.execute(
+            await connection.execute(
                 OriginBrand.__table__.update().values(
                     origin=self.NAME,
                     name=data['name'],
+                    updated_at=datetime.now(),
                 ).where(OriginBrand.__table__.c.id == data['value'])
             )
 
-        print('Brand "{}" is synced'.format(data['name']))
         brand_models_url = self.BRAND_MODELS_URL.format(brand=data['value'])
         async with session.get(brand_models_url) as response:
             models_json = await response.read()
             for model in json.loads(models_json.decode('utf-8')):
-                await self.prepare_model(data['value'], model)
+                model_id, model_data = await self.prepare_model(connection, data['value'], model)
+                models[model_id] = model_data
 
-    async def prepare_model(self, brand_id, data):
+        print('Brand "{}" is synced'.format(data['name']))
+        return data['value'], {
+            'models': models,
+        }
+
+    async def prepare_model(self, connection, brand_id, data):
         try:
-            await self.connection.execute(
+            await connection.execute(
                 OriginModel.__table__.insert().values(
                     origin=self.NAME,
                     id=data['value'],
                     brand_id=brand_id,
                     name=data['name'],
+                    created_at=datetime.now(),
+                    updated_at=datetime.now(),
                 )
             )
         except IntegrityError as e:
-            await self.connection.execute(
+            await connection.execute(
                 OriginModel.__table__.update().values(
                     origin=self.NAME,
                     name=data['name'],
                     brand_id=brand_id,
+                    updated_at=datetime.now(),
                 ).where(OriginModel.__table__.c.id == data['value'])
             )
 
         print('Model "{}" is synced'.format(data['name']))
-
-    def iter_pages(self):
-        pass
+        return data['value'], {}
 
     def iter_advertisements(self, soup):
         for adv_element in soup.select('.ticket-item-newauto'):
@@ -106,57 +149,3 @@ class Parser(object):
                 'advertisement_id': name_element.attrs.get('auto_id'),
             }
             yield data
-
-    async def parse_advertisement(self, adv):
-        self.number += 1
-        return self.number
-
-    async def __aiter__(self):
-        return self
-
-    async def __anext__(self):
-        if not self.current_page_url:
-            raise StopAsyncIteration
-
-        if not self.adv_iterator:
-            with aiohttp.ClientSession() as session:
-                with aiohttp.Timeout(10):
-                    async with session.get(self.current_page_url) as response:
-                        list_html = await response.read()
-                        soup = BeautifulSoup(list_html, 'html.parser')
-                        self.adv_iterator = self.iter_advertisements(soup)
-                        next_link = soup.select('.pagination .show-more.fl-r')
-                        if next_link:
-                            next_page = next_link[0].attrs['page']
-                            self.current_page_url = self.BASE_LIST_PAGE + '&page=' + next_page
-                        else:
-                            self.current_page_url = None
-
-        try:
-            data = self.adv_iterator.__next__()
-            adv_data = {
-                'is_new': False,
-                'origin': self.NAME,
-                'name': data['name'],
-                'model_id': data['model_id'],
-                'year': data['year'],
-            }
-            try:
-                await self.connection.execute(
-                    OriginAdvertisement.__table__.insert().values(
-                        id=data['advertisement_id'],
-                        **adv_data,
-                    )
-                )
-            except IntegrityError as e:
-                await self.connection.execute(
-                    OriginAdvertisement.__table__.update().values(
-                        **adv_data
-                    ).where(OriginAdvertisement.__table__.c.id == data['advertisement_id'])
-                )
-
-            print('Advertismenet "{}"" is synced'.format(data['name']))
-            return data
-        except StopIteration:
-            self.adv_iterator = None
-            return await self.__anext__()
