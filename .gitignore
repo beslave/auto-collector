@@ -1,10 +1,15 @@
-# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized
 __pycache__/
 *.py[cod]
 *$py.class
+.*
 
 # Translations
 *.mo
 *.pot
 
 .env
+
+/frontend/static/*
+
+!.gitkeep

@@ -1,11 +1,19 @@
+from aiohttp import web
+
 from auto import views
 
 
 class Url:
-    def __init__(self, pattern, view, method='GET'):
+    def __init__(self, pattern, view, method=None):
         self.pattern = pattern
-        self.method = method
         self.view = self.get_view(view)
+        self.method = method
+
+        if method is None and isinstance(view, web.View):
+            self.method = '*'
+        elif method is None:
+            self.method = 'GET'
+
 
     def get_view(self, view):
         if isinstance(view, str):
@@ -14,5 +22,6 @@ class Url:
 
 
 url_patterns = [
-    Url(r'/{name:.*}', 'hello')
+    Url(r'/', 'IndexView'),
+    Url(r'/{name:.*}', 'hello'),
 ]
