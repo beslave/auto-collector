@@ -37,21 +37,19 @@ class Parser(object):
 
     async def parse_advertisements(self):
         page_url = self.BASE_LIST_PAGE
-        with aiohttp.ClientSession() as session:
-            while page_url:
-                with aiohttp.Timeout(100):
-                    async with session.get(page_url) as response:
-                        page_url = None
-                        list_html = await response.read()
-                        soup = BeautifulSoup(list_html, 'html.parser')
+        while page_url:
+            response = await aiohttp.request('GET', page_url)
+            list_html = await response.read_and_close(decode=True)
+            page_url = None
+            soup = BeautifulSoup(list_html, 'html.parser')
 
-                        for adv_data in self.iter_advertisements(soup):
-                            self.parser.provide_data(adv_data)
+            for adv_data in self.iter_advertisements(soup):
+                self.parser.provide_data(adv_data)
 
-                        next_link = soup.select('.pagination .show-more.fl-r')
-                        if next_link:
-                            next_page = next_link[0].attrs['page']
-                            page_url = self.BASE_LIST_PAGE + '&page=' + next_page
+            next_link = soup.select('.pagination .show-more.fl-r')
+            if next_link:
+                next_page = next_link[0].attrs['page']
+                page_url = self.BASE_LIST_PAGE + '&page=' + next_page
 
 
     async def prepare(self, connection):

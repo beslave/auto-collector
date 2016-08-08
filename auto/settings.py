@@ -6,3 +6,5 @@ DATABASE = {
     'user': 'postgres',
     'password': 'p0stgres',
 }
+SITE_ADDR = '0.0.0.0'
+SITE_PORT = 8080

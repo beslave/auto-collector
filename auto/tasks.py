@@ -47,3 +47,8 @@ async def sync_data_task():
         print('{:=^40}'.format(' SYNC DATA '))
         await sync_data()
         await asyncio.sleep(settings.SYNC_TIMEOUT)
+
+
+tasks = [
+    sync_data_task,
+]
