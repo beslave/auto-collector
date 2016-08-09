@@ -32,10 +32,11 @@ class AdvertisementParser:
                 while True:
                     data = await self.queue.get()
                     adv_id = int(data['advertisement_id'])
+                    create = adv_id not in created_at
                     update_probability = self.get_update_probability(created_at.get(adv_id))
 
                     if update_probability >= random():
-                        await self.parse(connection, data)
+                        await self.parse(connection, data, create)
                         created_at[adv_id] = datetime.now()
 
     def to_int(self, value):
@@ -43,28 +44,32 @@ class AdvertisementParser:
         if value.isdigit():
             return int(value)
 
-    async def parse(self, connection, data):
+    async def parse(self, connection, data, create=True):
         adv_data = {
-            'is_new': False,
+            'is_new': True,
             'origin': self.origin,
             'name': data['name'],
             'model_id': data['model_id'],
             'year': data['year'],
             'price': self.to_int(data['price']),
             'updated_at': datetime.now(),
+            'preview': data['preview'],
         }
         try:
-            await connection.execute(self.table.insert().values(
-                id=data['advertisement_id'],
-                created_at=datetime.now(),
-                **adv_data,
-            ))
-        except IntegrityError as e:
-            await connection.execute(
-                self.table.update().values(**adv_data).where(
-                    self.table.c.id == data['advertisement_id']
+            if create:
+                await connection.execute(self.table.insert().values(
+                    id=data['advertisement_id'],
+                    created_at=datetime.now(),
+                    **adv_data,
+                ))
+            else:
+                await connection.execute(
+                    self.table.update().values(**adv_data).where(
+                        self.table.c.id == data['advertisement_id']
+                    )
                 )
-            )
+        except IntegrityError as e:
+            pass
 
         print('Advertismenet "{}" is synced'.format(data['name']))
 

@@ -36,6 +36,7 @@ class BaseAdvertisement:
     is_new = sa.Column(sa.Boolean)
     year = sa.Column(sa.Integer)
     price = sa.Column(sa.Integer)
+    preview = sa.Column(sa.String, nullable=True)
 
 
 def WithOrigin(RealModel):

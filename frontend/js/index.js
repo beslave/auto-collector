@@ -14,7 +14,7 @@
         var lastPage = page;
         var apiUrlTpl = container.dataset.apiUrl;
         var isEnd = false;
-        var scrollThreshold = 100;
+        var scrollThreshold = 250;
 
         $scope.models = modelsInitial;
 

@@ -23,18 +23,27 @@ class IndexView(web.View):
 
     async def get(self):
         page = int(self.request.GET.get('page', 1))
-        offset = page * self.PER_PAGE
+        offset = (page - 1) * self.PER_PAGE
 
         async with create_engine(**settings.DATABASE) as engine:
             async with engine.acquire() as connection:
                 join = sa.join(self.table, self.brand_table)
                 join = join.join(OriginAdvertisement.__table__)
                 price_avg = sa.func.avg(OriginAdvertisement.__table__.c.price)
+                price_min = sa.func.min(OriginAdvertisement.__table__.c.price)
+                price_max = sa.func.max(OriginAdvertisement.__table__.c.price)
+                previews = sa.func.array_agg(
+                    OriginAdvertisement.__table__.c.preview,
+                    order_by=OriginAdvertisement.__table__.c.price,
+                )
                 query = (sa.select([
                         self.table.c.id,
                         self.table.c.name,
                         self.brand_table.c.name,
                         price_avg.label('price_average'),
+                        price_min.label('price_min'),
+                        price_max.label('price_max'),
+                        previews.label('previews'),
                     ], use_labels=True)
                     .select_from(join)
                     .where(OriginAdvertisement.__table__.c.price > 0)
@@ -43,14 +52,21 @@ class IndexView(web.View):
                     .having(price_avg > 0)
                     .offset(offset).limit(self.PER_PAGE)
                 )
-                print(str(query))
                 models_rows = list(await connection.execute(query))
+
+        def get_preview(previews):
+            previews = sorted(filter(None, previews))
+            if previews:
+                return previews[0]
 
         models = [{
             'id': row[0],
             'name': row[1],
             'brand': row[2],
-            'avg_price': int(row[3]),
+            'price_avg': int(row[3]),
+            'price_min': int(row[4]),
+            'price_max': int(row[5]),
+            'preview': get_preview(row[6]),
         } for row in models_rows]
 
         context = {

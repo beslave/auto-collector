@@ -1,0 +1,29 @@
+.model {
+    display: inline-block;
+    position: relative;
+    width: 380px;
+    height: 250px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    box-sizing: border-box;
+    padding: $global-indent;
+    margin: $global-indent / 3;
+
+    &_title {
+
+    }
+
+    &_price {
+        position: absolute;
+        bottom: $global-indent;
+        right: $global-indent;
+    }
+
+    * {
+        font-weight: bold;
+        background-color: rgba(white, 0.7);
+        border-radius: $global-indent / 3;
+        padding: $global-indent / 3;
+    }
+}

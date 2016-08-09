@@ -148,5 +148,6 @@ class Parser(object):
                 'model_id': name_element.attrs.get('model_id'),
                 'complectation_id': name_element.attrs.get('complete_id'),
                 'advertisement_id': name_element.attrs.get('auto_id'),
+                'preview': photo_element.attrs.get('src'),
             }
             yield data
