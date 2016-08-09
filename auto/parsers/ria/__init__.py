@@ -1,6 +1,5 @@
 import asyncio
 import aiohttp
-import json
 
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -38,8 +37,10 @@ class Parser(object):
     async def parse_advertisements(self):
         page_url = self.BASE_LIST_PAGE
         while page_url:
-            response = await aiohttp.request('GET', page_url)
-            list_html = await response.read_and_close(decode=True)
+            with aiohttp.ClientSession() as client:
+                async with client.get(page_url) as response:
+                    list_html = await response.text()
+
             page_url = None
             soup = BeautifulSoup(list_html, 'html.parser')
 
@@ -54,17 +55,17 @@ class Parser(object):
 
     async def prepare(self, connection):
         brands = {}
-        with aiohttp.ClientSession() as session:
-            async with session.get(self.BRANDS_URL) as response:
-                brands_json = await response.read()
+        with aiohttp.ClientSession() as client:
+            async with client.get(self.BRANDS_URL) as response:
+                brands_json = await response.json()
 
-                for brand in json.loads(brands_json.decode('utf-8')):
-                    brand_id, brand_data = await self.prepare_brand(connection, session, brand)
-                    brands[brand_id] = brand_data
+        for brand in brands_json:
+            brand_id, brand_data = await self.prepare_brand(connection, brand)
+            brands[brand_id] = brand_data
 
         return brands
 
-    async def prepare_brand(self, connection, session, data):
+    async def prepare_brand(self, connection, data):
         models = {}
         try:
             await connection.execute(
@@ -86,11 +87,13 @@ class Parser(object):
             )
 
         brand_models_url = self.BRAND_MODELS_URL.format(brand=data['value'])
-        async with session.get(brand_models_url) as response:
-            models_json = await response.read()
-            for model in json.loads(models_json.decode('utf-8')):
-                model_id, model_data = await self.prepare_model(connection, data['value'], model)
-                models[model_id] = model_data
+        with aiohttp.ClientSession() as client:
+            async with client.get(brand_models_url) as response:
+                models_json = await response.json()
+
+        for model in models_json:
+            model_id, model_data = await self.prepare_model(connection, data['value'], model)
+            models[model_id] = model_data
 
         print('Brand "{}" is synced'.format(data['name']))
         return data['value'], {

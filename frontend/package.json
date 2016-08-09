@@ -1,0 +1,28 @@
+{
+  "name": "auto_collector",
+  "version": "0.0.0",
+  "description": "Pet project for auto advertisement scrapping",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beslave/auto-collector.git"
+  },
+  "author": "Vladyslav A. Lozhechnyk",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/beslave/auto-collector/issues"
+  },
+  "homepage": "https://github.com/beslave/auto-collector#readme",
+  "dependencies": {
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^3.1.0",
+    "gulp-clean": "^0.3.2",
+    "gulp-concat": "^2.6.0",
+    "gulp-jshint": "^2.0.1",
+    "gulp-sass": "^2.3.2",
+    "jshint": "^2.9.2"
+  }
+}

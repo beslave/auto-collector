@@ -1,5 +1,9 @@
 from aiohttp import web
 from aiohttp_jinja2 import template
+from aiopg.sa import create_engine
+
+from auto import settings
+from auto.models import OriginModel
 
 
 async def hello(request):
@@ -9,8 +13,17 @@ async def hello(request):
 
 
 class IndexView(web.View):
+    table = OriginModel.__table__
+    PER_PAGE = 20
+
     @template('index.html')
     async def get(self):
+        async with create_engine(**settings.DATABASE) as engine:
+            async with engine.acquire() as connection:
+                models = list(await connection.execute(
+                    self.table.select().offset(0).limit(self.PER_PAGE)
+                ))
+        
         return {
-            'key': 'value',
+            'models': models,
         }

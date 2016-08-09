@@ -11,5 +11,6 @@ __pycache__/
 .env
 
 /frontend/static/*
+/frontend/node_modules
 
 !.gitkeep
