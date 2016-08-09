@@ -41,24 +41,16 @@ gulp.task('js', function() {
 });
 
 gulp.task('watch', function() {
-    gulp.watch('scss/**/*.scss', function(event) {
-        gulp.run('scss');
-    });
-
-    gulp.watch('js/**/*.js', function(event) {
-        gulp.run('js');
-    });
-
-    gulp.watch('images/**/*', function(event) {
-        gulp.run('images');
-    });
+    gulp.watch('scss/**/*.scss', ['scss']);
+    gulp.watch('js/**/*.js', ['js']);
+    gulp.watch('images/**/*', ['images']);
 });
 
 gulp.task('clean', function() {
-    return gulp.src(['static'], {read: false})
+    return gulp.src(['static/**/*', '!static/.gitkeep'], {read: false})
         .pipe(clean());
 });
 
 gulp.task('default', ['clean'], function() {
-    gulp.run('scss', 'js', 'images', 'watch');
+    gulp.start('scss', 'js', 'images', 'watch');
 });

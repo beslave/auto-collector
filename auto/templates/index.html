@@ -1,7 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    {% for model in models %}
-        <div>{{ model.name }}</div>
-    {% endfor %}
+    <div id="js-models-list" ng-controller="ModelListController"
+        data-initial="{{ models_json|escape }}"
+        data-page="{{ page }}"
+        data-api-url="/?page={page}"
+    >
+    {% raw %}
+        <ul>
+            <li class="model" ng-repeat="model in models">
+                {{model.name}}
+            </li>
+        </ul>
+    {% endraw %}
+    </div>
 {% endblock %}
