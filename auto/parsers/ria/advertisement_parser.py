@@ -38,6 +38,11 @@ class AdvertisementParser:
                         await self.parse(connection, data)
                         created_at[adv_id] = datetime.now()
 
+    def to_int(self, value):
+        value = value.replace(' ', '')
+        if value.isdigit():
+            return int(value)
+
     async def parse(self, connection, data):
         adv_data = {
             'is_new': False,
@@ -45,6 +50,7 @@ class AdvertisementParser:
             'name': data['name'],
             'model_id': data['model_id'],
             'year': data['year'],
+            'price': self.to_int(data['price']),
             'updated_at': datetime.now(),
         }
         try:
@@ -54,7 +60,11 @@ class AdvertisementParser:
                 **adv_data,
             ))
         except IntegrityError as e:
-            return
+            await connection.execute(
+                self.table.update().values(**adv_data).where(
+                    self.table.c.id == data['advertisement_id']
+                )
+            )
 
         print('Advertismenet "{}" is synced'.format(data['name']))
 

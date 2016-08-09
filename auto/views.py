@@ -1,11 +1,12 @@
 import json
+import sqlalchemy as sa
 
 from aiohttp import web
 from aiohttp_jinja2 import render_template
 from aiopg.sa import create_engine
 
 from auto import settings
-from auto.models import OriginModel
+from auto.models import OriginAdvertisement, OriginBrand, OriginModel
 
 
 async def hello(request):
@@ -16,6 +17,8 @@ async def hello(request):
 
 class IndexView(web.View):
     table = OriginModel.__table__
+    brand_table = OriginBrand.__table__
+
     PER_PAGE = 20
 
     async def get(self):
@@ -24,14 +27,31 @@ class IndexView(web.View):
 
         async with create_engine(**settings.DATABASE) as engine:
             async with engine.acquire() as connection:
-                models_result = list(await connection.execute(
-                    self.table.select().offset(offset).limit(self.PER_PAGE)
-                ))
+                join = sa.join(self.table, self.brand_table)
+                join = join.join(OriginAdvertisement.__table__)
+                price_avg = sa.func.avg(OriginAdvertisement.__table__.c.price)
+                query = (sa.select([
+                        self.table.c.id,
+                        self.table.c.name,
+                        self.brand_table.c.name,
+                        price_avg.label('price_average'),
+                    ], use_labels=True)
+                    .select_from(join)
+                    .where(OriginAdvertisement.__table__.c.price > 0)
+                    .group_by(self.brand_table.c.id, self.table.c.id)
+                    .order_by(price_avg)
+                    .having(price_avg > 0)
+                    .offset(offset).limit(self.PER_PAGE)
+                )
+                print(str(query))
+                models_rows = list(await connection.execute(query))
 
         models = [{
-            'id': model.id,
-            'name': model.name,
-        } for model in models_result]
+            'id': row[0],
+            'name': row[1],
+            'brand': row[2],
+            'avg_price': int(row[3]),
+        } for row in models_rows]
 
         context = {
             'models_json': json.dumps(models),
