@@ -82,8 +82,6 @@ class AdvertisementParser:
         self.queue.put_nowait(data)
 
     def get_update_probability(self, created_at):
-        return 1.0
-
         if not created_at:
             return 1.0
 
