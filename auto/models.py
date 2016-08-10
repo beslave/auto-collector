@@ -153,3 +153,7 @@ class OriginAdvertisement(BaseAdvertisement, WithOrigin(Advertisement), Base):
         sa.ForeignKey(OriginComplectation.id),
         nullable=True,
     )
+    origin_url = sa.Column(
+        sa.String,
+        nullable=True,
+    )

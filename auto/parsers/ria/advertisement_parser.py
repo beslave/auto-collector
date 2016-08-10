@@ -45,9 +45,14 @@ class AdvertisementParser:
             return int(value)
 
     async def parse(self, connection, data, create=True):
+        origin_url = data['url']
+        if origin_url.startswith('/') and not origin_url.startswith('//'):
+            origin_url = 'https://auto.ria.com' + origin_url
+
         adv_data = {
             'is_new': True,
             'origin': self.origin,
+            'origin_url': origin_url,
             'name': data['name'],
             'model_id': data['model_id'],
             'year': data['year'],
@@ -77,6 +82,8 @@ class AdvertisementParser:
         self.queue.put_nowait(data)
 
     def get_update_probability(self, created_at):
+        return 1.0
+
         if not created_at:
             return 1.0
 

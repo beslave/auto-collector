@@ -1,21 +1,23 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div id="js-models-list" ng-controller="ModelListController"
-        data-api-url="/?page={page}"
-    >
+<div id="js-models-list" ng-controller="ModelListController"
+    data-api-url="/?page={page}"
+>
     {% raw %}
-        <div class="model-preview" ng-view></div>
-        <a class="model" ng-href="/{{ model.id }}/"
+        <a class="col-lg-3 col-md-4 model" ng-href="/{{ model.id }}/"
             ng-repeat="model in models"
-            ng-style="{'background-image': 'url({{ model.preview }})'}"
         >
+            <img class="model_image" ng-src="{{ model.preview }}" />
             <span class="model_title">{{ model.brand }} {{ model.name }}</span>
             <span class="model_price">
                 {{ model.price_avg }} грн.
-                ({{ model.price_min }} - {{ model.price_max }})
+                <span class="model_price__range" ng-if="model.price_min != model.price_max">
+                    ({{ model.price_min }} - {{ model.price_max }})
+                </span>
             </span>
         </a>
     {% endraw %}
-    </div>
+    <div class="model-preview" ng-view></div>
+</div>
 {% endblock %}

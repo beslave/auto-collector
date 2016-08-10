@@ -9,7 +9,11 @@ var sass = require('gulp-sass');
 gulp.task('scss', function() {
     return gulp.src('scss/main.scss')
         .pipe(sass({
-            style: 'expanded'
+            style: 'expanded',
+            includePaths: [
+                'scss',
+                'node_modules/bootstrap-sass/assets/stylesheets'
+            ]
         }))
         .pipe(autoprefixer(
             'last 2 version',
