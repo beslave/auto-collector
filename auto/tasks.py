@@ -50,5 +50,5 @@ async def sync_data_task():
 
 
 tasks = [
-    # sync_data_task,
+    sync_data_task,
 ]
