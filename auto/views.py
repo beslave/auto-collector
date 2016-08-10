@@ -9,19 +9,27 @@ from auto import settings
 from auto.models import OriginAdvertisement, OriginBrand, OriginModel
 
 
-async def hello(request):
-    name = request.match_info.get('name') or'Anonymous'
-    text = 'Hello, ' + name.capitalize()
-    return web.Response(body=text.encode('utf-8'))
+class BaseApiView(web.View):
+    template_name = 'index.html'
+
+    async def get(self):
+        if not self.request.is_ajax:
+            return render_template(self.template_name, self.request, {})
+
+        data = await self.get_json()
+        return web.Response(
+            body=json.dumps(data).encode('utf-8'),
+            headers={'Content-Type': 'text/json;charset=utf-8'}
+        )
 
 
-class IndexView(web.View):
+class IndexView(BaseApiView):
     table = OriginModel.__table__
     brand_table = OriginBrand.__table__
 
     PER_PAGE = 20
 
-    async def get(self):
+    async def get_json(self):
         page = int(self.request.GET.get('page', 1))
         offset = (page - 1) * self.PER_PAGE
 
@@ -59,7 +67,7 @@ class IndexView(web.View):
             if previews:
                 return previews[0]
 
-        models = [{
+        return [{
             'id': row[0],
             'name': row[1],
             'brand': row[2],
@@ -69,15 +77,10 @@ class IndexView(web.View):
             'preview': get_preview(row[6]),
         } for row in models_rows]
 
-        context = {
-            'models_json': json.dumps(models),
-            'page': page,
+
+class ModelView(BaseApiView):
+    async def get_json(self):
+        model_id = int(self.request.match_info['model_id'])
+        return {
+            'id': model_id,
         }
-
-        if self.request.is_ajax:
-            return web.Response(
-                body=context['models_json'].encode('utf-8'),
-                headers={'Content-Type': 'text/json;charset=utf-8'}
-            )
-
-        return render_template('index.html', self.request, context)

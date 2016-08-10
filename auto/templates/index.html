@@ -2,20 +2,20 @@
 
 {% block content %}
     <div id="js-models-list" ng-controller="ModelListController"
-        data-initial="{{ models_json|escape }}"
-        data-page="{{ page }}"
         data-api-url="/?page={page}"
     >
     {% raw %}
-        <ul>
-            <li class="model" ng-repeat="model in models" ng-style="{'background-image': 'url({{ model.preview }})'}">
-                <span class="model_title">{{ model.brand }} {{ model.name }}</span>
-                <span class="model_price">
-                    {{ model.price_avg }} грн.
-                    ({{ model.price_min }} - {{ model.price_max }})
-                </span>
-            </li>
-        </ul>
+        <div class="model-preview" ng-view></div>
+        <a class="model" ng-href="/{{ model.id }}/"
+            ng-repeat="model in models"
+            ng-style="{'background-image': 'url({{ model.preview }})'}"
+        >
+            <span class="model_title">{{ model.brand }} {{ model.name }}</span>
+            <span class="model_price">
+                {{ model.price_avg }} грн.
+                ({{ model.price_min }} - {{ model.price_max }})
+            </span>
+        </a>
     {% endraw %}
     </div>
 {% endblock %}

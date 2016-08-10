@@ -23,5 +23,5 @@ class Url:
 
 url_patterns = [
     Url(r'/', 'IndexView'),
-    Url(r'/{name:.*}', 'hello'),
+    Url(r'/{model_id:\d+}/', 'ModelView'),
 ]

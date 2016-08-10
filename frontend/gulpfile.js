@@ -1,4 +1,5 @@
 var autoprefixer = require('gulp-autoprefixer');
+var browserify = require('gulp-browserify');
 var clean = require('gulp-clean');
 var concat = require('gulp-concat');
 var gulp = require('gulp');
@@ -30,11 +31,15 @@ gulp.task('images', function() {
         .pipe(gulp.dest('static/images'));
 });
 
+gulp.task('templates', function() {
+    return gulp.src('templates/**/*').pipe(gulp.dest('static/templates'));
+});
+
 gulp.task('js', function() {
-    return gulp.src('js/**/*.js')
+    return gulp.src('js/index.js')
         .pipe(jshint('.jshintrc'))
         .pipe(jshint.reporter('default'))
-        .pipe(concat('main.js'))
+        .pipe(browserify())
         // .pipe(rename({ suffix: '.min' }))
         // .pipe(uglify()
         .pipe(gulp.dest('static'));
@@ -44,6 +49,7 @@ gulp.task('watch', function() {
     gulp.watch('scss/**/*.scss', ['scss']);
     gulp.watch('js/**/*.js', ['js']);
     gulp.watch('images/**/*', ['images']);
+    gulp.watch('templates/**/*', ['templates']);
 });
 
 gulp.task('clean', function() {
@@ -52,5 +58,5 @@ gulp.task('clean', function() {
 });
 
 gulp.task('default', ['clean'], function() {
-    gulp.start('scss', 'js', 'images', 'watch');
+    gulp.start('scss', 'js', 'images', 'templates', 'watch');
 });
