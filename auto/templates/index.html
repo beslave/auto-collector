@@ -1,14 +1,15 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div id="js-models-list" ng-controller="ModelListController"
+<div class="container-fluid"
+    id="js-models-list" ng-controller="ModelListController"
     data-api-url="/?page={page}"
 >
     {% raw %}
-        <a class="col-lg-3 col-md-4 model" ng-href="/{{ model.id }}/"
+        <a class="col-lg-3 col-md-4 col-sm-6 col-xs-12 model" ng-href="/{{ model.id }}/"
             ng-repeat="model in models"
         >
-            <img class="model_image" ng-src="{{ model.preview }}" />
+            <img class="img-responsive img-thumbnail model_image" ng-src="{{ model.preview }}" />
             <span class="model_title">{{ model.brand }} {{ model.name }}</span>
             <span class="model_price">
                 {{ model.price_avg }} грн.

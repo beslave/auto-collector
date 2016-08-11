@@ -1,15 +1,7 @@
 @charset 'utf-8';
 
-.ng-cloak {
-  display: none !important;
-}
-
 @import 'bootstrap';
 @import 'constants';
+@import 'layout';
 
 @import 'content/model/model';
-
-.modal .modal-body {
-    max-height: 80vh;
-    overflow-y: auto;
-}

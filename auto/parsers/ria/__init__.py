@@ -19,6 +19,7 @@ class Parser(object):
     BASE_LIST_PAGE = 'https://auto.ria.com/newauto_blocks/search?t=newdesign/search/search&limit=100'
     BRANDS_URL = 'https://api.auto.ria.com/categories/1/marks'
     BRAND_MODELS_URL = 'https://api.auto.ria.com/categories/1/marks/{brand}/models'
+    MAX_RETRIES = 5
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, '__instance__'):
@@ -36,14 +37,21 @@ class Parser(object):
 
     async def parse_advertisements(self):
         page_url = self.BASE_LIST_PAGE
-        while page_url:
-            with aiohttp.ClientSession() as client:
-                async with client.get(page_url) as response:
-                    list_html = await response.text()
+        retries = 0
+        while page_url and retries < self.MAX_RETRIES:
+            try:
+                with aiohttp.ClientSession() as client:
+                    async with client.get(page_url) as response:
+                        list_html = await response.text()
 
-            page_url = None
-            soup = BeautifulSoup(list_html, 'html.parser')
+                page_url = None
+                soup = BeautifulSoup(list_html, 'html.parser')
+            except Exception as e:
+                print(e)
+                retries += 1
+                continue
 
+            retries = 0
             for adv_data in self.iter_advertisements(soup):
                 self.parser.provide_data(adv_data)
 

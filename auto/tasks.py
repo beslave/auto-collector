@@ -45,7 +45,11 @@ async def sync_data():
 async def sync_data_task():
     while True:
         print('{:=^40}'.format(' SYNC DATA '))
-        await sync_data()
+        try:
+            await sync_data()
+        except Exception as e:
+            print(e)
+
         await asyncio.sleep(settings.SYNC_TIMEOUT)
 
 

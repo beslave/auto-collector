@@ -1,9 +1,8 @@
 .model {
     position: relative;
+    margin: 15px 0;
 
     &_image {
-        top: 0;
-        position: relative;
         width: 100%;
     }
     &_title {

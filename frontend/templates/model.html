@@ -1,21 +1,45 @@
 <div class="modal fade in" role="dialog" style="display: block;">
 <div class="modal-dialog modal-lg">
 <div class="modal-content">
-    <div class="modal-header">
-        <a href="/" class="close">&times;</a>
-        <h1>{{ brand.name }} {{ model.name }}</h1>
-    </div>
 
-    <div class="modal-body">
-        <ul>
-            <li ng-repeat="adv in advertisements">
+<div class="modal-header">
+    <a href="/" class="close">&times;</a>
+    <h1>{{ brand.name }} {{ model.name }}</h1>
+</div>
+
+<div class="modal-body">
+<table class="table">
+    <thead>
+        <tr>
+            <th>Назва</th>
+            <th>Рік</th>
+            <th>Ціна</th>
+            <th>Фото</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="adv in advertisements">
+            <td>
                 <a ng-href="{{ adv.origin_url }}" target="_blank">
-                    {{ adv.name }} {{ adv.year }} ({{ adv.price || '-' }} грн.)
-                    <img ng-src="{{ adv.preview }}" />
+                    {{ adv.name }}
                 </a>
-            </li>
-        </ul>
-    </div>
+            </td>
+            <td>{{ adv.year }}</td>
+            <td>
+                {{ adv.price }} грн.
+            </td>
+            <td>
+                <img ng-src="{{ adv.preview }}" height="64px" />
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<div class="modal-footer">
+    <a href="/" class="btn btn-default" data-dismiss="modal">Закрити</a>
+</div>
+
 </div>
 </div>
 </div>
