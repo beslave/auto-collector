@@ -1,6 +1,6 @@
 .model {
     position: relative;
-    margin: 15px 0;
+    margin: $global-indent / 2 0;
 
     &_image {
         width: 100%;

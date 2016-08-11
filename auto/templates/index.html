@@ -1,24 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid"
-    id="js-models-list" ng-controller="ModelListController"
-    data-api-url="/?page={page}"
->
-    {% raw %}
-        <a class="col-lg-3 col-md-4 col-sm-6 col-xs-12 model" ng-href="/{{ model.id }}/"
-            ng-repeat="model in models"
-        >
-            <img class="img-responsive img-thumbnail model_image" ng-src="{{ model.preview }}" />
-            <span class="model_title">{{ model.brand }} {{ model.name }}</span>
-            <span class="model_price">
-                {{ model.price_avg }} грн.
-                <span class="model_price__range" ng-if="model.price_min != model.price_max">
-                    ({{ model.price_min }} - {{ model.price_max }})
-                </span>
-            </span>
-        </a>
-    {% endraw %}
-    <div class="model-preview" ng-view></div>
+<div class="container-fluid">
+    <div class="col-lg-2 col-md-3 col-sm-4 col-xs-12 list-filters"
+        ng-controller="ModelListFiltersController"
+    >
+        {% include 'model/snippets/filters.html' %}
+    </div>
+    <div class="col-lg-10 col-md-9 col-sm-8 col-xs-12"
+        id="js-models-list" ng-controller="ModelListController"
+        data-api-url="/?page={page}"
+    >
+        {% include 'model/list.html' %}
+    </div>
 </div>
 {% endblock %}

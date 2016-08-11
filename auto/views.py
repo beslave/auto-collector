@@ -35,7 +35,7 @@ class IndexView(BaseApiView):
     table = OriginModel.__table__
     brand_table = OriginBrand.__table__
 
-    PER_PAGE = 20
+    PER_PAGE = 50
 
     async def get_json(self, connection):
         page = int(self.request.GET.get('page', 1))
@@ -123,3 +123,40 @@ class ModelView(BaseApiView):
             'model': dict(model),
             'advertisements': advertisements,
         }
+
+
+class BrandListView(BaseApiView):
+    table = OriginBrand.__table__
+
+    async def get_json(self, connection):
+        join = sa.join(self.table, OriginModel.__table__).join(OriginAdvertisement.__table__)
+        adv_count = sa.func.count(OriginAdvertisement.__table__.c.id)
+
+        brands_result = await connection.execute(
+            self.table.select()
+            .select_from(join)
+            .where(OriginAdvertisement.__table__.c.price > 0)
+            .group_by(self.table.c.id)
+            .having(adv_count > 0)
+            .order_by(self.table.c.name)
+        )
+        return [dict(row) for row in brands_result]
+
+
+class ModelListView(BaseApiView):
+    table = OriginModel.__table__
+
+    async def get_json(self, connection):
+        brand_id = int(self.request.match_info['brand_id'])
+        join = sa.join(self.table, OriginAdvertisement.__table__)
+        adv_count = sa.func.count(OriginAdvertisement.__table__.c.id)
+        models_result = await connection.execute(
+            self.table.select()
+            .select_from(join)
+            .where(self.table.c.brand_id == brand_id)
+            .where(OriginAdvertisement.__table__.c.price > 0)
+            .group_by(self.table.c.id)
+            .having(adv_count > 0)
+            .order_by(self.table.c.name)
+        )
+        return [dict(row) for row in models_result]

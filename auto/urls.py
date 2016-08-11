@@ -24,4 +24,7 @@ class Url:
 url_patterns = [
     Url(r'/', 'IndexView'),
     Url(r'/{model_id:\d+}/', 'ModelView'),
+
+    Url(r'/api/brands', 'BrandListView'),
+    Url(r'/api/brands/{brand_id:\d+}/models', 'ModelListView'),
 ]

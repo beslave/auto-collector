@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = {
-    ModelController: require('./model.js'),
-    ModelListController: require('./model_list.js')
+    ModelController: require('./model'),
+    ModelListController: require('./model_list'),
+    ModelListFiltersController: require('./model_list_filters')
 };

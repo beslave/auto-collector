@@ -4,6 +4,7 @@ var app = require('./app.js');
 var controllers = require('./controllers');
 
 app.controller('ModelListController', controllers.ModelListController);
+app.controller('ModelListFiltersController', controllers.ModelListFiltersController);
 app.controller('ModelController', controllers.ModelController);
 
 app.config(function ($routeProvider, $locationProvider) {

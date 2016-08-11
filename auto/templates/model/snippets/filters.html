@@ -1,0 +1,22 @@
+{% raw %}
+<div class="form-group">
+    <label for="brandFilter">Марка</label>
+    <select id="brandFilter" class="form-control"
+        ng-options="brand.name for brand in brands track by brand.id"
+        ng-model="filters.brand"
+        ng-change="filterByBrand()"
+    >
+        <option value="">Будь-яка</option>
+    </select>
+</div>
+<div class="form-group">
+    <label for="modelFilter">Модель</label>
+    <select id="modelFilter" class="form-control"
+        ng-options="model.name for model in models track by model.id"
+        ng-model="filters.model"
+        ng-change="updateFilters()"
+    >
+        <option value="">Будь-яка</option>
+    </select>
+</div>
+{% endraw %}

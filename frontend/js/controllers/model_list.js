@@ -2,14 +2,14 @@
 
 module.exports = function ($scope, $http, $window) {
     var container = document.getElementById('js-models-list');
-    var modelsInitial = [];
     var page = 0;
     var lastPage = page;
     var apiUrlTpl = container.dataset.apiUrl;
     var isEnd = false;
     var scrollThreshold = 250;
 
-    $scope.models = modelsInitial;
+    $scope.models = [];
+    $scope.filterParams = {};
 
     function loadExtraModels () {
         var modelElements = document.querySelectorAll('.model');
@@ -22,7 +22,7 @@ module.exports = function ($scope, $http, $window) {
         lastPage += 1;
         $http({
             method: 'GET',
-            url: apiUrlTpl.replace('{page}', lastPage),
+            url: apiUrlTpl.replace('{page}', lastPage)
         }).then(function (response) {
             var extraModels = response.data;
             Array.prototype.push.apply($scope.models, extraModels);
@@ -30,6 +30,20 @@ module.exports = function ($scope, $http, $window) {
             setTimeout(loadExtraModels, 0);
         });
     }
+
+    $scope.$on('modelListFiltersChange', function (e, filters) {
+        $scope.filterParams = {};
+
+        if (filters.brand) {
+            $scope.filterParams.brand = filters.brand.name;
+        }
+
+        if (filters.model) {
+            $scope.filterParams.id = filters.model.id;
+        }
+
+        setTimeout(loadExtraModels, 0);
+    });
 
     setTimeout(function () {
         loadExtraModels();
