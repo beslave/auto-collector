@@ -2,9 +2,12 @@
 
 var app = require('./app.js');
 var controllers = require('./controllers');
+var providers = require('./providers');
 
-app.controller('ModelListController', controllers.ModelListController);
-app.controller('ModelListFiltersController', controllers.ModelListFiltersController);
+app.provider('autoData', providers.autoData);
+
+app.controller('ItemsListController', controllers.ItemsListController);
+app.controller('ItemsListFiltersController', controllers.ItemsListFiltersController);
 app.controller('ModelController', controllers.ModelController);
 
 app.config(function ($routeProvider, $locationProvider) {

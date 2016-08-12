@@ -26,5 +26,5 @@ url_patterns = [
     Url(r'/{model_id:\d+}/', 'ModelView'),
 
     Url(r'/api/brands', 'BrandListView'),
-    Url(r'/api/brands/{brand_id:\d+}/models', 'ModelListView'),
+    Url(r'/api/models', 'ModelListView'),
 ]

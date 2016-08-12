@@ -1,0 +1,42 @@
+<div class="list-filters">
+    {% raw %}
+    <div class="form-group">
+        <label for="brandFilter">Марка</label>
+        <select id="brandFilter" class="form-control"
+            ng-options="brand.name for brand in brands track by brand.id"
+            ng-model="filters.brand"
+            ng-change="filterByBrand()"
+        >
+            <option value="">Будь-яка</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="modelFilter">Модель</label>
+        <select id="modelFilter" class="form-control"
+            ng-options="model.name for model in models track by model.id"
+            ng-model="filters.model"
+            ng-change="updateFilters()"
+            ng-disabled="models.length < 2"
+        >
+            <option ng-if="models.length !== 1" value="">Будь-яка</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="yearFilter">Рік випуску</label>
+        <div class="row">
+            <div class="col-xs-6">
+                <input id="yearFilter" class="form-control" type="number"
+                    ng-model="filters.yearFrom" ng-change="updateFilters()"
+                    placeholder="З"
+                />
+            </div>
+            <div class="col-xs-6">
+                <input id="yearFilter" class="form-control" type="number"
+                    ng-model="filters.yearTo" ng-change="updateFilters()"
+                    placeholder="До"
+                />
+            </div>
+        </div>
+    </div>
+    {% endraw %}
+</div>

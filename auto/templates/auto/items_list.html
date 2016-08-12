@@ -1,0 +1,13 @@
+<div class="row">
+{% raw %}
+    <a class="col-lg-4 col-md-6 col-sm-12 col-xs-12 item js-list-item"
+        ng-repeat="item in items | orderBy: 'price_avg' | limitTo: showItemsCount"
+        ng-href="{{ item.url }}"
+    >
+        <img class="img-responsive img-thumbnail item_image" ng-src="{{ item.preview }}" />
+        <span class="item_title">{{ item.title }}</span>
+        <span class="item_price">{{ item.price }}</span>
+    </a>
+{% endraw %}
+<div class="item-preview" ng-view></div>
+</div>
