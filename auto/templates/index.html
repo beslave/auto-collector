@@ -2,16 +2,11 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="col-lg-2 col-md-3 col-sm-4 col-xs-12 list-filters"
-        ng-controller="ModelListFiltersController"
-    >
-        {% include 'model/snippets/filters.html' %}
+    <div class="col-lg-2 col-md-3 col-sm-4 col-xs-12" ng-controller="ItemsListFiltersController">
+        {% include 'auto/snippets/filters.html' %}
     </div>
-    <div class="col-lg-10 col-md-9 col-sm-8 col-xs-12"
-        id="js-models-list" ng-controller="ModelListController"
-        data-api-url="/?page={page}"
-    >
-        {% include 'model/list.html' %}
+    <div class="col-lg-10 col-md-9 col-sm-8 col-xs-12" ng-controller="ItemsListController">
+        {% include 'auto/items_list.html' %}
     </div>
 </div>
 {% endblock %}
