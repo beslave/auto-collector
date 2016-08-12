@@ -1,3 +1,10 @@
 .list-filters {
-    padding: $global-indent / 2 0;
+    padding: $global-indent / 2 $global-indent / 2 0;
+    position: fixed;
+    width: inherit;
+
+    &-wrapper {
+        padding: 0;
+        position: relative;
+    }
 }
