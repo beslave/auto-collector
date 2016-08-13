@@ -4,15 +4,15 @@ import aiohttp
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+from auto import settings
 from auto.models import (
+    OriginAdvertisement,
     OriginBrand,
     OriginComplectation,
     OriginModel,
 )
-from auto.utils import log
+from auto.utils import get_absolute_url, log, shorten_url
 from auto.updaters import UpdaterByCreatedAt
-
-from .advertisement_parser import AdvertisementParser
 
 
 class BrandUpdater(UpdaterByCreatedAt):
@@ -33,9 +33,24 @@ class ModelUpdater(UpdaterByCreatedAt):
         return result
 
 
+class AdvertisementUpdater(UpdaterByCreatedAt):
+    table = OriginAdvertisement.__table__
+
+    async def create(self, data):
+        data['origin_url'] = await shorten_url(data['origin_url'])
+        data['preview'] = await shorten_url(data['preview'])
+        return await super().create(data)
+
+    async def update(self, data):
+        result = await super().update(data)
+        log('Advertisement "{}" is synced', data['name'])
+        return result
+
+
 class Parser(object):
     NAME = 'ria'
-    BASE_LIST_PAGE = 'https://auto.ria.com/newauto_blocks/search?t=newdesign/search/search&limit=100'
+    BASE_URL = 'https://auto.ria.com'
+    BASE_LIST_PAGE = 'https://auto.ria.com/newauto_blocks/search?t=newdesign/search/search&category_id=1&limit=100'
     BRANDS_URL = 'https://api.auto.ria.com/categories/1/marks'
     BRAND_MODELS_URL = 'https://api.auto.ria.com/categories/1/marks/{brand}/models'
     MAX_RETRIES = 5
@@ -45,14 +60,19 @@ class Parser(object):
             cls.__instance__ = super().__new__(cls, *args, **kwargs)
         return cls.__instance__
 
-    def __init__(self, *args, **kwargs):
-        self.parser = AdvertisementParser(self.NAME)
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.parser.run())
+    async def parse(self):
+        if not getattr(self, 'is_initialized', False):
+            self.brand_updater = await BrandUpdater.new()
+            self.model_updater = await ModelUpdater.new()
+            self.adv_updater = await AdvertisementUpdater.new()
+            self.is_initialized = True
 
-    async def parse(self, connection):
-        await self.prepare(connection)
+        await self.prepare()
+        await self.brand_updater.delete_not_updated()
+        await self.model_updater.delete_not_updated()
+
         await self.parse_advertisements()
+        await self.adv_updater.delete_not_updated()
 
     async def parse_advertisements(self):
         page_url = self.BASE_LIST_PAGE
@@ -72,7 +92,7 @@ class Parser(object):
 
             retries = 0
             for adv_data in self.iter_advertisements(soup):
-                self.parser.provide_data(adv_data)
+                await self.adv_updater.update(adv_data)
 
             next_link = soup.select('.pagination .show-more.fl-r')
             if next_link:
@@ -80,17 +100,14 @@ class Parser(object):
                 page_url = self.BASE_LIST_PAGE + '&page=' + next_page
 
 
-    async def prepare(self, connection):
+    async def prepare(self):
         with aiohttp.ClientSession() as client:
             async with client.get(self.BRANDS_URL) as response:
                 brands = await response.json()
 
-        brand_updater = await BrandUpdater.new(connection)
-        model_updater = await ModelUpdater.new(connection)
-
         for brand in brands:
             brand_data = self.parse_brand(brand)
-            await brand_updater.update(brand_data)
+            await self.brand_updater.update(brand_data)
 
             brand_models_url = self.BRAND_MODELS_URL.format(brand=brand_data['id'])
             with aiohttp.ClientSession() as client:
@@ -100,7 +117,7 @@ class Parser(object):
             for model in models:
                 model['brand_id'] = brand_data['id']
                 model_data = self.parse_model(model)
-                await model_updater.update(model_data)
+                await self.model_updater.update(model_data)
 
         return brands
 
@@ -121,6 +138,11 @@ class Parser(object):
             'updated_at': datetime.now(),
         }
 
+    def to_int(self, value):
+        value = value.strip().replace(' ', '')
+        if value.isdigit():
+            return int(value)
+
     def iter_advertisements(self, soup):
         for adv_element in soup.select('.ticket-item-newauto'):
             name_element = adv_element.select('.name a')[0]
@@ -128,22 +150,22 @@ class Parser(object):
             price_element = adv_element.select('.block-price strong')[0]
             photo_element = adv_element.select('.block-photo img')[0]
 
-            year = year_element.text.strip()
-            if year.isdigit():
-                year = int(year)
-            else:
-                year = None
-
-            data = {
-                'url': name_element.attrs['href'],
+            origin_url = name_element.attrs['href']
+            origin_url = get_absolute_url(origin_url, self.BASE_URL)
+            preview = photo_element.attrs.get('src', '').strip()
+            preview = get_absolute_url(preview, self.BASE_URL)
+            yield {
+                'id': self.to_int(name_element.attrs.get('auto_id')),
+                'is_new': True,
+                'origin': self.NAME,
+                'origin_url': origin_url,
                 'name': name_element.text.strip(),
-                'year': year,
-                'price': price_element.text.strip(),
-                'autosalon_id': name_element.attrs.get('autosalon_id'),
-                'marka_id': name_element.attrs.get('marka_id'),
                 'model_id': name_element.attrs.get('model_id'),
-                'complectation_id': name_element.attrs.get('complete_id'),
-                'advertisement_id': name_element.attrs.get('auto_id'),
-                'preview': photo_element.attrs.get('src', '').strip(),
+                'year': self.to_int(year_element.text),
+                'price': self.to_int(price_element.text),
+                'updated_at': datetime.now(),
+                'preview': preview,
+                # 'autosalon_id': name_element.attrs.get('autosalon_id'),
+                # 'marka_id': name_element.attrs.get('marka_id'),
+                # 'complectation_id': name_element.attrs.get('complete_id'),
             }
-            yield data

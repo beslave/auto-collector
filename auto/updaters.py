@@ -1,9 +1,22 @@
+from aiopg.sa import create_engine
 from datetime import datetime
 from psycopg2 import IntegrityError
 from random import random
 from sqlalchemy.sql import select
 
+from auto import settings
 from auto.utils import log
+
+
+async def make_db_query(query, processor=None):
+    async with create_engine(**settings.DATABASE) as engine:
+        async with engine.acquire() as connection:
+            results = await connection.execute(query)
+            
+            if processor:
+                return processor(results)
+
+            return results
 
 
 class Updater:
@@ -12,20 +25,18 @@ class Updater:
     condition_fields = []
 
     @classmethod
-    async def new(cls, connection, *args, **kwargs):
+    async def new(cls, *args, **kwargs):
         self = cls(*args, **kwargs)
-        self.connection = connection
         fields = [self.pk_field] + self.condition_fields
-        select_fields = [getattr(self.table.c, field) for field in fields]
-        rows = await self.connection.execute(select(select_fields))
-
-        self.cache = {
+        query = select([getattr(self.table.c, field) for field in fields])
+        self.cache = await make_db_query(query, lambda rows: {
             getattr(row, self.pk_field): [
                 getattr(row, field)
                 for field in self.condition_fields
             ]
             for row in rows
-        }
+        })
+        self.not_updated = set(self.cache.keys())
         return self
 
     def get_update_probability(self, **kwargs):
@@ -36,6 +47,7 @@ class Updater:
 
     async def update(self, data):
         pk = data.get(self.pk_field)
+        self.not_updated.discard(pk)
         if pk not in self.cache:
             return await self.create(data)
 
@@ -45,7 +57,7 @@ class Updater:
         if update_probability >= random():
             query = self.table.update().values(**data).where(self.table.c.id == pk)
             try:
-                return await self.connection.execute(query)
+                return await make_db_query(query)
             except IntegrityError as e:
                 log(e)
 
@@ -58,9 +70,18 @@ class Updater:
         query = self.table.insert().values(**data)
 
         try:
-            return await self.connection.execute(query)
+            return await make_db_query(query)
         except IntegrityError as e:
             log(e)
+
+    async def delete_not_updated(self):
+        if self.not_updated:
+            pk_field = getattr(self.table.c, self.pk_field)
+            query = self.table.delete().where(pk_field.in_(self.not_updated))
+            result = await make_db_query(query)
+            log('{}: {} objects were removed!', self.table.name, len(self.not_updated))
+
+        self.not_updated = set(self.cache.keys())
 
 
 class UpdaterByCreatedAt(Updater):

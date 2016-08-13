@@ -2,7 +2,6 @@ import aiohttp
 import asyncio
 import json
 
-from aiopg.sa import create_engine
 from functools import wraps
 from psycopg2 import IntegrityError
 
@@ -37,10 +36,8 @@ async def sync_categories(connection, response):
 
 
 async def sync_data():
-    async with create_engine(**settings.DATABASE) as engine:
-        async with engine.acquire() as connection:
-            for parser in get_parsers():
-                await parser.parse(connection)
+        for parser in get_parsers():
+            await parser.parse()
 
 
 async def sync_data_task():
