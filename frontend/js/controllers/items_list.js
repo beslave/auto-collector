@@ -5,6 +5,7 @@ module.exports = function ($scope, $http, $filter, $window, autoData) {
     var filterParams = {};
     var PER_PAGE = 20;
     var SCROLL_THRESHOLD = 250;
+    var number = $filter('number');
 
     $scope.items = [];
     $scope.showItemsCount = PER_PAGE;
@@ -59,9 +60,7 @@ module.exports = function ($scope, $http, $filter, $window, autoData) {
         });
 
         $scope.items = [];
-        Object.keys(grouped_items).forEach(function (key) {
-            var number = $filter('number');
-            var item = grouped_items[key];
+        angular.forEach(grouped_items, function (item) {
             item.price_avg = avg(item.prices);
             item.price_min = Math.min.apply(null, item.prices)
             item.price_max = Math.max.apply(null, item.prices);
