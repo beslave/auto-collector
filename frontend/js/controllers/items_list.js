@@ -66,14 +66,16 @@ module.exports = function ($scope, $http, $filter, $window, autoData) {
             }
             item.price += ' грн.';
 
-            item.title = item.brand.name + ' ' + item.model.name;
+            if (item.brand && item.model) {
+                item.title = item.brand.name + ' ' + item.model.name;
+            }
             item.url = '/' + item.model_id + '/';
 
             $scope.items.push(item);
         });
     };
 
-    var loadExtraItems = function () {
+    var loadExtraItems = function (timeout) {
         setTimeout(function () {
             if ($scope.showItemsCount >= $scope.items.length) {
                 return;
@@ -85,9 +87,9 @@ module.exports = function ($scope, $http, $filter, $window, autoData) {
             if (bottom - window.innerHeight < SCROLL_THRESHOLD) {
                 $scope.showItemsCount += PER_PAGE;
                 $scope.$applyAsync();
-                loadExtraItems();
+                loadExtraItems(500);
             }
-        }, 0);
+        }, timeout || 0);
     };
 
     $http.get('/').then(function (response) {

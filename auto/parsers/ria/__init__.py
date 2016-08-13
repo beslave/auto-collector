@@ -10,8 +10,28 @@ from auto.models import (
     OriginComplectation,
     OriginModel,
 )
+from auto.utils import log
+from auto.updaters import UpdaterByCreatedAt
 
 from .advertisement_parser import AdvertisementParser
+
+
+class BrandUpdater(UpdaterByCreatedAt):
+    table = OriginBrand.__table__
+
+    async def update(self, data):
+        result = await super().update(data)
+        log('Brand "{}" is synced', data['name'])
+        return result
+
+
+class ModelUpdater(UpdaterByCreatedAt):
+    table = OriginModel.__table__
+
+    async def update(self, data):
+        result = await super().update(data)
+        log('Model "{}" is synced', data['name'])
+        return result
 
 
 class Parser(object):
@@ -32,7 +52,7 @@ class Parser(object):
         loop.create_task(self.parser.run())
 
     async def parse(self, connection):
-        brands = await self.prepare(connection)
+        await self.prepare(connection)
         await self.parse_advertisements()
 
     async def parse_advertisements(self):
@@ -47,7 +67,7 @@ class Parser(object):
                 page_url = None
                 soup = BeautifulSoup(list_html, 'html.parser')
             except Exception as e:
-                print(e)
+                log(e)
                 retries += 1
                 continue
 
@@ -62,76 +82,45 @@ class Parser(object):
 
 
     async def prepare(self, connection):
-        brands = {}
         with aiohttp.ClientSession() as client:
             async with client.get(self.BRANDS_URL) as response:
-                brands_json = await response.json()
+                brands = await response.json()
 
-        for brand in brands_json:
-            brand_id, brand_data = await self.prepare_brand(connection, brand)
-            brands[brand_id] = brand_data
+        brand_updater = await BrandUpdater.new(connection)
+        model_updater = await ModelUpdater.new(connection)
+
+        for brand in brands:
+            brand_data = self.parse_brand(brand)
+            await brand_updater.update(brand_data)
+
+            brand_models_url = self.BRAND_MODELS_URL.format(brand=brand_data['id'])
+            with aiohttp.ClientSession() as client:
+                async with client.get(brand_models_url) as response:
+                    models = await response.json()
+
+            for model in models:
+                model['brand_id'] = brand_data['id']
+                model_data = self.parse_model(model)
+                await model_updater.update(model_data)
 
         return brands
 
-    async def prepare_brand(self, connection, data):
-        models = {}
-        try:
-            await connection.execute(
-                OriginBrand.__table__.insert().values(
-                    origin=self.NAME,
-                    id=data['value'],
-                    name=data['name'],
-                    created_at=datetime.now(),
-                    updated_at=datetime.now(),
-                )
-            )
-        except IntegrityError as e:
-            await connection.execute(
-                OriginBrand.__table__.update().values(
-                    origin=self.NAME,
-                    name=data['name'],
-                    updated_at=datetime.now(),
-                ).where(OriginBrand.__table__.c.id == data['value'])
-            )
-
-        brand_models_url = self.BRAND_MODELS_URL.format(brand=data['value'])
-        with aiohttp.ClientSession() as client:
-            async with client.get(brand_models_url) as response:
-                models_json = await response.json()
-
-        for model in models_json:
-            model_id, model_data = await self.prepare_model(connection, data['value'], model)
-            models[model_id] = model_data
-
-        print('Brand "{}" is synced'.format(data['name']))
-        return data['value'], {
-            'models': models,
+    def parse_brand(self, data):
+        return {
+            'origin': self.NAME,
+            'id': data['value'],
+            'name': data['name'],
+            'updated_at': datetime.now(),
         }
 
-    async def prepare_model(self, connection, brand_id, data):
-        try:
-            await connection.execute(
-                OriginModel.__table__.insert().values(
-                    origin=self.NAME,
-                    id=data['value'],
-                    brand_id=brand_id,
-                    name=data['name'],
-                    created_at=datetime.now(),
-                    updated_at=datetime.now(),
-                )
-            )
-        except IntegrityError as e:
-            await connection.execute(
-                OriginModel.__table__.update().values(
-                    origin=self.NAME,
-                    name=data['name'],
-                    brand_id=brand_id,
-                    updated_at=datetime.now(),
-                ).where(OriginModel.__table__.c.id == data['value'])
-            )
-
-        print('Model "{}" is synced'.format(data['name']))
-        return data['value'], {}
+    def parse_model(self, data):
+        return {
+            'origin': self.NAME,
+            'id': data['value'],
+            'brand_id': data['brand_id'],
+            'name': data['name'],
+            'updated_at': datetime.now(),
+        }
 
     def iter_advertisements(self, soup):
         for adv_element in soup.select('.ticket-item-newauto'):

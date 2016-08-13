@@ -8,6 +8,7 @@ from psycopg2 import IntegrityError
 
 from auto import settings
 from auto.parsers import get_parsers
+from auto.utils import log
 
 
 api_url = lambda method: 'http://api.auto.ria.com' + method
@@ -44,11 +45,11 @@ async def sync_data():
 
 async def sync_data_task():
     while True:
-        print('{:=^40}'.format(' SYNC DATA '))
+        log('{:=^40}'.format(' SYNC DATA '))
         try:
             await sync_data()
         except Exception as e:
-            print(e)
+            log(e)
 
         await asyncio.sleep(settings.SYNC_TIMEOUT)
 

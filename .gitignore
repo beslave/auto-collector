@@ -9,6 +9,7 @@ __pycache__/
 *.pot
 
 .env
+settings_local.py
 
 /frontend/static/*
 /frontend/node_modules

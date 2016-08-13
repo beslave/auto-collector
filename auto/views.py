@@ -37,7 +37,7 @@ class IndexView(BaseApiView):
     PER_PAGE = 50
 
     async def get_json(self, connection):
-        fields = ['id', 'name', 'year', 'price', 'preview', 'origin_url', 'model_id']
+        fields = ['year', 'price', 'preview', 'origin_url', 'model_id']
         rows = await connection.execute(
             sa.select([getattr(self.table.c, f) for f in fields])
             .where(self.table.c.price > 0)
