@@ -18,10 +18,19 @@ module.exports = function ($scope, $http, $filter, $window, autoData) {
         return adv.model_id;
     };
     var isSatisfyFilters = function (adv) {
+        var model = autoData.getModel(adv.model_id);
+        var brand = model && autoData.getBrand(model.brand_id);
+
         if (filterParams.yearFrom && adv.year < filterParams.yearFrom) {
             return false;
         }
         if (filterParams.yearTo && adv.year > filterParams.yearTo) {
+            return false;
+        }
+        if (filterParams.brand && !angular.equals(filterParams.brand, brand)) {
+            return false;
+        }
+        if (filterParams.model && !angular.equals(filterParams.model, model)) {
             return false;
         }
         return true;
