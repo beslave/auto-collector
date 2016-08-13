@@ -3,7 +3,6 @@ import aiohttp
 
 from bs4 import BeautifulSoup
 from datetime import datetime
-from psycopg2 import IntegrityError
 
 from auto.models import (
     OriginBrand,

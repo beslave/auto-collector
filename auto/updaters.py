@@ -3,6 +3,9 @@ from psycopg2 import IntegrityError
 from random import random
 from sqlalchemy.sql import select
 
+from auto.utils import log
+
+
 class Updater:
     table = None
     pk_field = 'id'
@@ -41,13 +44,23 @@ class Updater:
 
         if update_probability >= random():
             query = self.table.update().values(**data).where(self.table.c.id == pk)
-            return await self.connection.execute(query)
+            try:
+                return await self.connection.execute(query)
+            except IntegrityError as e:
+                log(e)
 
     async def create(self, data):
         pk = data.get(self.pk_field)
+        if pk in self.cache:
+            return await update(self, data)
+
         self.cache[pk] = [data.get(x) for x in self.condition_fields]
         query = self.table.insert().values(**data)
-        return await self.connection.execute(query)        
+
+        try:
+            return await self.connection.execute(query)
+        except IntegrityError as e:
+            log(e)
 
 
 class UpdaterByCreatedAt(Updater):
