@@ -47,6 +47,7 @@ class Updater:
 
     async def update(self, data):
         pk = data.get(self.pk_field)
+        log('{}: Sync #{}', self.table.name, pk)
         self.not_updated.discard(pk)
         if pk not in self.cache:
             return await self.create(data)

@@ -18,19 +18,9 @@ from auto.updaters import UpdaterByCreatedAt
 class BrandUpdater(UpdaterByCreatedAt):
     table = OriginBrand.__table__
 
-    async def update(self, data):
-        result = await super().update(data)
-        log('Brand "{}" is synced', data['name'])
-        return result
-
 
 class ModelUpdater(UpdaterByCreatedAt):
     table = OriginModel.__table__
-
-    async def update(self, data):
-        result = await super().update(data)
-        log('Model "{}" is synced', data['name'])
-        return result
 
 
 class AdvertisementUpdater(UpdaterByCreatedAt):
@@ -40,11 +30,6 @@ class AdvertisementUpdater(UpdaterByCreatedAt):
         data['origin_url'] = await shorten_url(data['origin_url'])
         data['preview'] = await shorten_url(data['preview'])
         return await super().create(data)
-
-    async def update(self, data):
-        result = await super().update(data)
-        log('Advertisement "{}" is synced', data['name'])
-        return result
 
 
 class Parser(object):
