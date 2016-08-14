@@ -53,11 +53,7 @@ class Parser(object):
             self.is_initialized = True
 
         await self.prepare()
-        await self.brand_updater.delete_not_updated()
-        await self.model_updater.delete_not_updated()
-
         await self.parse_advertisements()
-        await self.adv_updater.delete_not_updated()
 
     async def parse_advertisements(self):
         page_url = self.BASE_LIST_PAGE

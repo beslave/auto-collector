@@ -80,6 +80,10 @@ class Updater:
             pk_field = getattr(self.table.c, self.pk_field)
             query = self.table.delete().where(pk_field.in_(self.not_updated))
             result = await make_db_query(query)
+
+            for pk in self.not_updated:
+                self.cache.pop(pk, None)
+
             log('{}: {} objects were removed!', self.table.name, len(self.not_updated))
 
         self.not_updated = set(self.cache.keys())
