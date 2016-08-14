@@ -2,6 +2,7 @@ exports.autoData = function () {
     var data = {
         brands: [],
         models: [],
+        filters: [],
 
         getBrand: function (brandId) {
             if (this.brands) {
@@ -19,14 +20,16 @@ exports.autoData = function () {
         }
     };
 
-    this.$get = function ($resource) {
+    this.$get = function ($rootScope, $resource) {
         var Brand = $resource('/api/brands/:brandId', {brandId: '@id'});
         var Model = $resource('/api/models/:modelId', {modelId: '@id'});
         data.brands = Brand.query(function (results) {
-            data.brands = results;
-        });
-        data.models = Model.query(function (results) {
-            data.models = results;
+            data.models = Model.query(function (results) {
+                data.models.forEach(function (model) {
+                    model.brand = data.getBrand(model.brand_id);
+                });
+                $rootScope.$broadcast('autoDataChanged', data);
+            });
         });
         return data;
     };

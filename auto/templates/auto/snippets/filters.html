@@ -3,9 +3,9 @@
     <div class="form-group">
         <label for="brandFilter">Марка</label>
         <select id="brandFilter" class="form-control"
-            ng-options="brand.name for brand in brands track by brand.id"
-            ng-model="filters.brand"
-            ng-change="filterByBrand()"
+            ng-options="brand.name for brand in autoData.brands track by brand.id"
+            ng-model="autoData.filters.brand"
+            ng-change="updateFilters('brand')"
         >
             <option value="">Будь-яка</option>
         </select>
@@ -14,7 +14,7 @@
         <label for="modelFilter">Модель</label>
         <select id="modelFilter" class="form-control"
             ng-options="model.name for model in models track by model.id"
-            ng-model="filters.model"
+            ng-model="autoData.filters.model"
             ng-change="updateFilters()"
             ng-disabled="models.length < 2"
         >
@@ -26,13 +26,13 @@
         <div class="row">
             <div class="col-xs-6">
                 <input id="yearFilter" class="form-control" type="number"
-                    ng-model="filters.yearFrom" ng-change="updateFilters('yearFrom')"
+                    ng-model="autoData.filters.yearFrom" ng-change="updateFilters('yearFrom')"
                     placeholder="З"
                 />
             </div>
             <div class="col-xs-6">
                 <input id="yearFilter" class="form-control" type="number"
-                    ng-model="filters.yearTo" ng-change="updateFilters('yearTo')"
+                    ng-model="autoData.filters.yearTo" ng-change="updateFilters('yearTo')"
                     placeholder="До"
                 />
             </div>

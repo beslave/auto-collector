@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/beslave/auto-collector#readme",
   "dependencies": {
+    "angular-storage": "0.0.15",
     "bootstrap-sass": "^3.3.7",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^3.1.0",

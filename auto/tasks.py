@@ -36,8 +36,8 @@ async def sync_categories(connection, response):
 
 
 async def sync_data():
-        for parser in get_parsers():
-            await parser.parse()
+    for parser in get_parsers():
+        await parser.parse()
 
 
 async def sync_data_task():

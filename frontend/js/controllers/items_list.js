@@ -2,7 +2,6 @@
 
 module.exports = function ($scope, $http, $filter, $window, autoData) {
     var advertisements = [];
-    var filterParams = {};
     var PER_PAGE = 20;
     var SCROLL_THRESHOLD = 250;
     var number = $filter('number');
@@ -21,17 +20,20 @@ module.exports = function ($scope, $http, $filter, $window, autoData) {
     var isSatisfyFilters = function (adv) {
         var model = autoData.getModel(adv.model_id);
         var brand = model && autoData.getBrand(model.brand_id);
+        var brandId = brand && brand.id;
+        var filterBrandId = autoData.filters.brand && autoData.filters.brand.id;
+        var filterModelId = autoData.filters.model && autoData.filters.model.id;
 
-        if (filterParams.yearFrom && adv.year < filterParams.yearFrom) {
+        if (autoData.filters.yearFrom && adv.year < autoData.filters.yearFrom) {
             return false;
         }
-        if (filterParams.yearTo && adv.year > filterParams.yearTo) {
+        if (autoData.filters.yearTo && adv.year > autoData.filters.yearTo) {
             return false;
         }
-        if (filterParams.brand && !angular.equals(filterParams.brand, brand)) {
+        if (autoData.filters.brand && !angular.equals(filterBrandId, brandId)) {
             return false;
         }
-        if (filterParams.model && !angular.equals(filterParams.model, model)) {
+        if (autoData.filters.model && !angular.equals(filterModelId, adv.model_id)) {
             return false;
         }
         return true;
@@ -112,13 +114,13 @@ module.exports = function ($scope, $http, $filter, $window, autoData) {
         updateItems();
     });
 
-    $scope.$on('itemsListFiltersChange', function (e, filters) {
-        filterParams = filters;
+    function resetItems() {
         $scope.showItemsCount = PER_PAGE;
 
         updateItems();
         loadExtraItems();
-    });
+    }
+    $scope.$on('autoDataChanged', resetItems);
 
     loadExtraItems();
     angular.element($window).bind('scroll', loadExtraItems);

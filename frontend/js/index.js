@@ -1,5 +1,7 @@
 'use strict';
 
+require('angular-storage');
+
 var app = require('./app.js');
 var controllers = require('./controllers');
 var providers = require('./providers');
