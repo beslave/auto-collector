@@ -1,13 +1,13 @@
-"""Add base models
+"""Base models
 
-Revision ID: 1a73c4af1c34
+Revision ID: 734b944fd3a7
 Revises: 
-Create Date: 2016-07-27 18:19:35.533631
+Create Date: 2016-08-15 23:43:35.411885
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '1a73c4af1c34'
+revision = '734b944fd3a7'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -35,11 +35,13 @@ def upgrade():
     op.create_table('auto_originbrand',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
-    sa.Column('origin', sa.String(), nullable=True),
+    sa.Column('origin', sa.String(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('real_instance', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['real_instance'], ['auto_brand.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('origin', 'name', name='origin_name_uc')
+    sa.PrimaryKeyConstraint('id', 'origin'),
+    sa.UniqueConstraint('origin', 'name')
     )
     op.create_index(op.f('ix_auto_originbrand_origin'), 'auto_originbrand', ['origin'], unique=False)
     op.create_table('auto_complectation',
@@ -53,12 +55,14 @@ def upgrade():
     op.create_table('auto_originmodel',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
-    sa.Column('origin', sa.String(), nullable=True),
+    sa.Column('origin', sa.String(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('brand_id', sa.Integer(), nullable=False),
     sa.Column('real_instance', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['brand_id'], ['auto_originbrand.id'], ),
+    sa.ForeignKeyConstraint(['brand_id', 'origin'], ['auto_originbrand.id', 'auto_originbrand.origin'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['real_instance'], ['auto_model.id'], ),
-    sa.PrimaryKeyConstraint('id'),
+    sa.PrimaryKeyConstraint('id', 'origin'),
     sa.UniqueConstraint('origin', 'name', 'brand_id', name='origin_name_brand_uc')
     )
     op.create_index(op.f('ix_auto_originmodel_origin'), 'auto_originmodel', ['origin'], unique=False)
@@ -68,6 +72,7 @@ def upgrade():
     sa.Column('is_new', sa.Boolean(), nullable=True),
     sa.Column('year', sa.Integer(), nullable=True),
     sa.Column('price', sa.Integer(), nullable=True),
+    sa.Column('preview', sa.String(), nullable=True),
     sa.Column('model_id', sa.Integer(), nullable=False),
     sa.Column('complectation_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['complectation_id'], ['auto_complectation.id'], ),
@@ -77,12 +82,14 @@ def upgrade():
     op.create_table('auto_origincomplectation',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
-    sa.Column('origin', sa.String(), nullable=True),
+    sa.Column('origin', sa.String(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('model_id', sa.Integer(), nullable=False),
     sa.Column('real_instance', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['model_id'], ['auto_originmodel.id'], ),
+    sa.ForeignKeyConstraint(['model_id', 'origin'], ['auto_originmodel.id', 'auto_originmodel.origin'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['real_instance'], ['auto_complectation.id'], ),
-    sa.PrimaryKeyConstraint('id'),
+    sa.PrimaryKeyConstraint('id', 'origin'),
     sa.UniqueConstraint('origin', 'name', 'model_id', name='origin_name_model_uc')
     )
     op.create_index(op.f('ix_auto_origincomplectation_origin'), 'auto_origincomplectation', ['origin'], unique=False)
@@ -92,14 +99,18 @@ def upgrade():
     sa.Column('is_new', sa.Boolean(), nullable=True),
     sa.Column('year', sa.Integer(), nullable=True),
     sa.Column('price', sa.Integer(), nullable=True),
-    sa.Column('origin', sa.String(), nullable=True),
+    sa.Column('preview', sa.String(), nullable=True),
+    sa.Column('origin', sa.String(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('model_id', sa.Integer(), nullable=False),
     sa.Column('complectation_id', sa.Integer(), nullable=True),
+    sa.Column('origin_url', sa.String(), nullable=True),
     sa.Column('real_instance', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['complectation_id'], ['auto_origincomplectation.id'], ),
-    sa.ForeignKeyConstraint(['model_id'], ['auto_originmodel.id'], ),
+    sa.ForeignKeyConstraint(['complectation_id', 'origin'], ['auto_origincomplectation.id', 'auto_origincomplectation.origin'], onupdate='CASCADE', ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['model_id', 'origin'], ['auto_originmodel.id', 'auto_originmodel.origin'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['real_instance'], ['auto_advertisement.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id', 'origin')
     )
     op.create_index(op.f('ix_auto_originadvertisement_origin'), 'auto_originadvertisement', ['origin'], unique=False)
     ### end Alembic commands ###
