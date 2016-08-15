@@ -4,6 +4,7 @@ import logging
 
 from bs4 import BeautifulSoup
 from datetime import datetime
+from urllib.parse import urlencode
 
 from auto import settings
 from auto.models import (
@@ -39,7 +40,16 @@ class AdvertisementUpdater(UpdaterByCreatedAt):
 class Parser(object):
     NAME = 'ria'
     BASE_URL = 'https://auto.ria.com'
-    BASE_LIST_PAGE = 'https://auto.ria.com/newauto_blocks/search?t=newdesign/search/search&category_id=1&limit=100'
+    BASE_LIST_PAGE = 'https://auto.ria.com/newauto_blocks/search?' + urlencode({
+        'catalog_name': 'category',
+        'category_id': 1,
+        'is_land': 1,
+        'lang_id': 2,
+        'limit': 100,
+        'order': 15,
+        't': 'newdesign/search/search',
+        'target': 'newauto_category',
+    })
     BRANDS_URL = 'https://api.auto.ria.com/categories/1/marks'
     BRAND_MODELS_URL = 'https://api.auto.ria.com/categories/1/marks/{brand}/models'
     MAX_RETRIES = 5
