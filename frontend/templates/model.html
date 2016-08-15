@@ -8,17 +8,35 @@
 </div>
 
 <div class="modal-body">
-<table class="table">
+<table class="table advertisements-table">
     <thead>
         <tr>
-            <th>Назва</th>
-            <th>Рік</th>
-            <th>Ціна</th>
+            <th class="advertisements-table_sortable"
+                ng-click="setOrderBy('name')"
+                ng-class="{
+                    'advertisements-table_sortable__active': ordering.by == 'name',
+                    'reversed': ordering.reverse
+                }"
+            >Назва</th>
+            <th class="advertisements-table_sortable"
+                ng-click="setOrderBy('year')"
+                ng-class="{
+                    'advertisements-table_sortable__active': ordering.by == 'year',
+                    'reversed': ordering.reverse
+                }"
+            >Рік</th>
+            <th class="advertisements-table_sortable"
+                ng-click="setOrderBy('price')"
+                ng-class="{
+                    'advertisements-table_sortable__active': ordering.by == 'price',
+                    'reversed': ordering.reverse
+                }"
+            >Ціна</th>
             <th>Фото</th>
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="adv in advertisements">
+        <tr ng-repeat="adv in advertisements|orderBy:ordering.by:ordering.reverse">
             <td>
                 <a ng-href="{{ adv.origin_url }}" target="_blank">
                     {{ adv.name }}

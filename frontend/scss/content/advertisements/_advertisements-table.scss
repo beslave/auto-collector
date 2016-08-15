@@ -1,0 +1,12 @@
+.advertisements-table {
+    &_sortable {
+        cursor: pointer;
+
+        &__active:after {
+            content: '\25b2';
+        }
+        &__active.reversed:after{
+            content: '\25bc';
+        }
+    }
+}
