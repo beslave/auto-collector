@@ -47,7 +47,9 @@
                 {{ adv.price | number }} грн.
             </td>
             <td>
-                <img ng-src="{{ adv.preview }}" height="64px" />
+                <a ng-href="{{ adv.origin_url }}" target="_blank">
+                    <img ng-src="{{ adv.preview }}" height="64px" />
+                </a>
             </td>
         </tr>
     </tbody>
