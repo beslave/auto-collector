@@ -7,14 +7,6 @@ from datetime import datetime
 from auto import settings
 
 
-def log(msg, *args, **kwargs):
-    message = str(msg).format(*args, **kwargs)
-    print('{time} - {message}'.format(
-        time=datetime.now().strftime('%Y/%m/%d %H:%M:%S'),
-        message=message,
-    ))
-
-
 def get_absolute_url(url, base_url):
     if url and url.startswith('/') and not url.startswith('//'):
         url = base_url.rstrip('/') + url

@@ -1,5 +1,6 @@
 import asyncio
 import aiohttp
+import logging
 
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -11,8 +12,11 @@ from auto.models import (
     OriginComplectation,
     OriginModel,
 )
-from auto.utils import get_absolute_url, log, shorten_url
+from auto.utils import get_absolute_url, shorten_url
 from auto.updaters import UpdaterByCreatedAt
+
+
+logger = logging.getLogger('auto.parsers.ria')
 
 
 class BrandUpdater(UpdaterByCreatedAt):
@@ -67,7 +71,7 @@ class Parser(object):
                 page_url = None
                 soup = BeautifulSoup(list_html, 'html.parser')
             except Exception as e:
-                log(e)
+                logger.exception(e)
                 retries += 1
                 continue
 

@@ -1,3 +1,5 @@
+import logging
+
 from aiopg.sa import create_engine
 from datetime import datetime
 from psycopg2 import IntegrityError
@@ -5,14 +7,16 @@ from random import random
 from sqlalchemy.sql import select
 
 from auto import settings
-from auto.utils import log
+
+
+logger = logging.getLogger('auto.updater')
 
 
 async def make_db_query(query, processor=None):
     async with create_engine(**settings.DATABASE) as engine:
         async with engine.acquire() as connection:
             results = await connection.execute(query)
-            
+
             if processor:
                 return processor(results)
 
@@ -47,7 +51,7 @@ class Updater:
 
     async def update(self, data):
         pk = data.get(self.pk_field)
-        log('{}: Sync #{}', self.table.name, pk)
+        logger.debug('{}: Sync #{}'.format(self.table.name, pk))
         self.not_updated.discard(pk)
         if pk not in self.cache:
             return await self.create(data)
@@ -60,7 +64,7 @@ class Updater:
             try:
                 return await make_db_query(query)
             except IntegrityError as e:
-                log(e)
+                logger.exception(e)
 
     async def create(self, data):
         pk = data.get(self.pk_field)
@@ -73,7 +77,7 @@ class Updater:
         try:
             return await make_db_query(query)
         except IntegrityError as e:
-            log(e)
+            logger.exception(e)
 
     async def delete_not_updated(self):
         if self.not_updated:
@@ -84,7 +88,7 @@ class Updater:
             for pk in self.not_updated:
                 self.cache.pop(pk, None)
 
-            log('{}: {} objects were removed!', self.table.name, len(self.not_updated))
+            logger.debug('{}: {} objects were removed!'.format(self.table.name, len(self.not_updated)))
 
         self.not_updated = set(self.cache.keys())
 

@@ -103,7 +103,10 @@ class BrandListView(BaseApiView):
             .having(adv_count > 0)
             .order_by(self.table.c.name)
         )
-        return [dict(row) for row in brands_result]
+        return [{
+            'id': row.id,
+            'name': row.name
+        } for row in brands_result]
 
 
 class ModelListView(BaseApiView):
@@ -120,4 +123,8 @@ class ModelListView(BaseApiView):
             .having(adv_count > 0)
             .order_by(self.table.c.name)
         )
-        return [dict(row) for row in models_result]
+        return [{
+            'id': row.id,
+            'name': row.name,
+            'brand_id': row.brand_id,
+        } for row in models_result]

@@ -11,6 +11,7 @@ __pycache__/
 .env
 settings_local.py
 
+/logs/*
 /frontend/static/*
 /frontend/node_modules
 !/frontend/.jshintrc

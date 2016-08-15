@@ -1,5 +1,7 @@
 'use strict';
 
+var utils = require('../utils');
+
 module.exports = function ($scope, $http, $filter, $window, autoData) {
     var advertisements = [];
     var PER_PAGE = 20;
@@ -39,7 +41,7 @@ module.exports = function ($scope, $http, $filter, $window, autoData) {
         return true;
     };
 
-    var updateItems = function () {
+    var updateItems = utils.debounce(function () {
         var grouped_items = {};
         advertisements.forEach(function (adv) {
             if (!isSatisfyFilters(adv)) {
@@ -83,7 +85,8 @@ module.exports = function ($scope, $http, $filter, $window, autoData) {
 
             $scope.items.push(item);
         });
-    };
+        $scope.$apply();
+    }, 500);
 
     var loadExtraItems = function (timeout) {
         setTimeout(function () {
