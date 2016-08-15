@@ -26,4 +26,8 @@ module.exports = function ($scope, $http, $location, store) {
         }
         store.set(TABLE_ORDERING_STORE_KEY, $scope.ordering);
     };
+
+    $scope.closeModal = function () {
+        $location.path('/');
+    };
 };
