@@ -98,10 +98,11 @@ class BrandListView(BaseApiView):
         brands_result = await connection.execute(
             self.table.select()
             .select_from(join)
+            .where(self.table.c.origin == 'ria')
             .where(OriginAdvertisement.__table__.c.price > 0)
-            .group_by(self.table.c.id)
+            .group_by(self.table.c.id, self.table.c.origin)
             .having(adv_count > 0)
-            .order_by(self.table.c.name)
+            .order_by(self.table.c.id)
         )
         return [{
             'id': row.id,
@@ -118,10 +119,11 @@ class ModelListView(BaseApiView):
         models_result = await connection.execute(
             self.table.select()
             .select_from(join)
+            .where(self.table.c.origin == 'ria')
             .where(OriginAdvertisement.__table__.c.price > 0)
-            .group_by(self.table.c.id)
+            .group_by(self.table.c.id, self.table.c.origin)
             .having(adv_count > 0)
-            .order_by(self.table.c.name)
+            .order_by(self.table.c.id)
         )
         return [{
             'id': row.id,

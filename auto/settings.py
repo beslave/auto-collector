@@ -53,7 +53,11 @@ LOGGING = {
             'propagate': True,
             'level': 'DEBUG',
         },
-    }
+    },
+    'root': {
+        'handlers': ['file'],
+        'level': 'ERROR',
+    },
 }
 
 try:

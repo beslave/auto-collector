@@ -3,7 +3,7 @@
     <div class="form-group">
         <label for="brandFilter">Марка</label>
         <select id="brandFilter" class="form-control"
-            ng-options="brand.name for brand in autoData.brands track by brand.id"
+            ng-options="brand.name for brand in autoData.brands|orderBy:'name' track by brand.id"
             ng-model="autoData.filters.brand"
             ng-change="updateFilters('brand')"
         >
@@ -13,7 +13,7 @@
     <div class="form-group">
         <label for="modelFilter">Модель</label>
         <select id="modelFilter" class="form-control"
-            ng-options="model.name for model in models track by model.id"
+            ng-options="model.name for model in models|orderBy:'name' track by model.id"
             ng-model="autoData.filters.model"
             ng-change="updateFilters()"
             ng-disabled="models.length < 2"
