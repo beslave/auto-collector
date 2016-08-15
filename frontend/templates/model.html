@@ -5,7 +5,7 @@
 <div class="modal-content" ng-click="$event.stopPropagation()">
 
 <div class="modal-header">
-    <a href="/" class="close">&times;</a>
+    <a href="/" ng-click="closeModal($event)" class="close">&times;</a>
     <h1>{{ brand.name }} {{ model.name }}</h1>
 </div>
 
@@ -59,7 +59,7 @@
 </div>
 
 <div class="modal-footer">
-    <a href="/" class="btn btn-default" data-dismiss="modal">Закрити</a>
+    <a href="/" ng-click="closeModal($event)" class="btn btn-default" data-dismiss="modal">Закрити</a>
 </div>
 
 </div>

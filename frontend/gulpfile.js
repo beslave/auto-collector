@@ -57,7 +57,7 @@ gulp.task('watch', function() {
 });
 
 gulp.task('clean', function() {
-    return gulp.src(['static/**/*', '!static/.gitkeep'], {read: false})
+    return gulp.src(['static/*', '!static/.gitkeep'], {read: false})
         .pipe(clean());
 });
 

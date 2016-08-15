@@ -2,7 +2,7 @@
 
 var utils = require('../utils');
 
-module.exports = function ($scope, $http, $filter, $window, autoData) {
+module.exports = function ($scope, $http, $filter, $window, $location, autoData) {
     var advertisements = [];
     var PER_PAGE = 20;
     var SCROLL_THRESHOLD = 250;
