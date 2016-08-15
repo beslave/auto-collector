@@ -14,6 +14,12 @@ def get_absolute_url(url, base_url):
     return url
 
 
+def parse_int(value):
+    value = value.strip().replace(' ', '')
+    if value.isdigit():
+        return int(value)
+
+
 async def shorten_url(url):
     if settings.SHORTENER_API_KEY and url and len(url) > 32:
         params = {'longUrl': url}

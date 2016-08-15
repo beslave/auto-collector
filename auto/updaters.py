@@ -7,6 +7,7 @@ from random import random
 from sqlalchemy.sql import select
 
 from auto import settings
+from auto.utils import shorten_url
 
 
 logger = logging.getLogger('auto.updater')
@@ -24,7 +25,6 @@ async def make_db_query(query, processor=None):
 
 
 class Updater:
-    table = None
     pk_field = 'id'
     condition_fields = []
 
@@ -43,13 +43,33 @@ class Updater:
         self.not_updated = set(self.cache.keys())
         return self
 
+    def __init__(self, table, url_fields=[]):
+        self.table = table
+        self.url_fields = url_fields
+
+    def __iter__(self):
+        for pk in self.cache:
+            yield pk
+
     def get_update_probability(self, **kwargs):
         return 0
 
     def get_condition_data(self, pk):
         return dict(zip(self.condition_fields, self.cache[pk]))
 
+    async def preprocess_data(self, data):
+        processed = {}
+        for field, value in data.items():
+            if field in self.url_fields:
+                value = await shorten_url(value)
+
+            processed[field] = value
+
+        return processed
+
     async def update(self, data):
+        data = await self.preprocess_data(data)
+
         pk = data.get(self.pk_field)
         logger.debug('{}: Sync #{}'.format(self.table.name, pk))
         self.not_updated.discard(pk)
@@ -69,7 +89,7 @@ class Updater:
     async def create(self, data):
         pk = data.get(self.pk_field)
         if pk in self.cache:
-            return await update(self, data)
+            return
 
         self.cache[pk] = [data.get(x) for x in self.condition_fields]
         query = self.table.insert().values(**data)
