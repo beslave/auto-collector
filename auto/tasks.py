@@ -7,6 +7,7 @@ from psycopg2 import IntegrityError
 
 from auto import settings
 from auto.parsers import get_parsers
+from auto.synchronizer import Synchronizer
 
 
 logger = logging.getLogger('auto.tasks')
@@ -25,6 +26,8 @@ def get_parser_task(parser):
     return parser_task
 
 
-parser_tasks = [get_parser_task(parser) for parser in get_parsers()]
-tasks = parser_tasks + [
-]
+synchronizer = Synchronizer()
+
+tasks = []
+tasks += [get_parser_task(parser) for parser in get_parsers()]
+tasks += [synchronizer.run]

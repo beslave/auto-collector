@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import partial
 
 from auto import settings
-from auto.models import OriginAdvertisement, OriginBrand, OriginModel
+from auto.models import Advertisement, Brand, Model
 
 
 def json_serialize(obj):
@@ -32,12 +32,12 @@ class BaseApiView(web.View):
 
 
 class IndexView(BaseApiView):
-    table = OriginAdvertisement.__table__
+    table = Advertisement.__table__
 
     PER_PAGE = 50
 
     async def get_json(self, connection):
-        fields = ['year', 'price', 'preview', 'origin_url', 'model_id']
+        fields = ['is_new', 'year', 'price', 'preview', 'origin_url', 'model_id']
         rows = await connection.execute(
             sa.select([getattr(self.table.c, f) for f in fields])
             .where(self.table.c.price > 0)
@@ -50,9 +50,9 @@ class IndexView(BaseApiView):
 
 
 class ModelView(BaseApiView):
-    brand_table = OriginBrand.__table__
-    table = OriginModel.__table__
-    adv_table = OriginAdvertisement.__table__
+    brand_table = Brand.__table__
+    table = Model.__table__
+    adv_table = Advertisement.__table__
 
     async def get_json(self, connection):
         model_id = int(self.request.match_info['model_id'])
@@ -89,18 +89,17 @@ class ModelView(BaseApiView):
 
 
 class BrandListView(BaseApiView):
-    table = OriginBrand.__table__
+    table = Brand.__table__
 
     async def get_json(self, connection):
-        join = sa.join(self.table, OriginModel.__table__).join(OriginAdvertisement.__table__)
-        adv_count = sa.func.count(OriginAdvertisement.__table__.c.id)
+        join = sa.join(self.table, Model.__table__).join(Advertisement.__table__)
+        adv_count = sa.func.count(Advertisement.__table__.c.id)
 
         brands_result = await connection.execute(
             self.table.select()
             .select_from(join)
-            .where(self.table.c.origin == 'ria-new')
-            .where(OriginAdvertisement.__table__.c.price > 0)
-            .group_by(self.table.c.id, self.table.c.origin)
+            .where(Advertisement.__table__.c.price > 0)
+            .group_by(self.table.c.id)
             .having(adv_count > 0)
             .order_by(self.table.c.id)
         )
@@ -111,17 +110,16 @@ class BrandListView(BaseApiView):
 
 
 class ModelListView(BaseApiView):
-    table = OriginModel.__table__
+    table = Model.__table__
 
     async def get_json(self, connection):
-        join = sa.join(self.table, OriginAdvertisement.__table__)
-        adv_count = sa.func.count(OriginAdvertisement.__table__.c.id)
+        join = sa.join(self.table, Advertisement.__table__)
+        adv_count = sa.func.count(Advertisement.__table__.c.id)
         models_result = await connection.execute(
             self.table.select()
             .select_from(join)
-            .where(self.table.c.origin == 'ria-new')
-            .where(OriginAdvertisement.__table__.c.price > 0)
-            .group_by(self.table.c.id, self.table.c.origin)
+            .where(Advertisement.__table__.c.price > 0)
+            .group_by(self.table.c.id)
             .having(adv_count > 0)
             .order_by(self.table.c.id)
         )

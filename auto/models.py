@@ -7,38 +7,42 @@ Base = declarative_base()
 
 
 class BaseBrand:
-    id = sa.Column(sa.Integer)
-    name = sa.Column(
-        sa.String,
-    )
+    id = sa.Column(sa.Integer, autoincrement=True)
+    name = sa.Column(sa.String)
+    created_at = sa.Column(sa.DateTime(timezone=False))
+    updated_at = sa.Column(sa.DateTime(timezone=False))
 
 
 class BaseModel:
-    id = sa.Column(sa.Integer)
+    id = sa.Column(sa.Integer, autoincrement=True)
     name = sa.Column(sa.String)
+    created_at = sa.Column(sa.DateTime(timezone=False))
+    updated_at = sa.Column(sa.DateTime(timezone=False))
 
 
 class BaseComplectation:
-    id = sa.Column(sa.Integer)
+    id = sa.Column(sa.Integer, autoincrement=True)
     name = sa.Column(sa.String)
+    created_at = sa.Column(sa.DateTime(timezone=False))
+    updated_at = sa.Column(sa.DateTime(timezone=False))
 
 
 class BaseAdvertisement:
-    id = sa.Column(sa.Integer)
+    id = sa.Column(sa.Integer, autoincrement=True)
+    created_at = sa.Column(sa.DateTime(timezone=False))
+    updated_at = sa.Column(sa.DateTime(timezone=False))
 
     name = sa.Column(sa.String)
     is_new = sa.Column(sa.Boolean)
     year = sa.Column(sa.Integer)
     price = sa.Column(sa.Integer)
     preview = sa.Column(sa.String, nullable=True)
+    origin_url = sa.Column(sa.String, nullable=True)
 
 
 def WithOrigin(RealModel):
     class _WithOrigin:
         origin = sa.Column(sa.String, index=True)
-
-        created_at = sa.Column(sa.DateTime(timezone=False))
-        updated_at = sa.Column(sa.DateTime(timezone=False))
 
         @declared_attr
         def real_instance(cls):
@@ -163,4 +167,3 @@ class OriginAdvertisement(BaseAdvertisement, WithOrigin(Advertisement), Base):
 
     model_id = sa.Column(sa.Integer, nullable=False)
     complectation_id = sa.Column(sa.Integer, nullable=True)
-    origin_url = sa.Column(sa.String, nullable=True)

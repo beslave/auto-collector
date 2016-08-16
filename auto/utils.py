@@ -2,6 +2,8 @@ import aiohttp
 import asyncio
 import json
 
+from aiopg.sa import create_engine
+from contextlib import contextmanager
 from datetime import datetime
 
 from auto import settings
@@ -45,3 +47,14 @@ async def shorten_url(url):
                     print(response_json)
 
     return url
+
+
+async def make_db_query(query, processor=None):
+    async with create_engine(**settings.DATABASE) as engine:
+        async with engine.acquire() as connection:
+            results = await connection.execute(query)
+
+            if processor:
+                return processor(results)
+
+            return results

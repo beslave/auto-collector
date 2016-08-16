@@ -8,6 +8,9 @@ from auto.parsers.base import BaseParser
 from auto.utils import get_absolute_url, get_first_for_keys, parse_int
 
 
+logger = logging.getLogger('auto.parsers.ria')
+
+
 class BaseRiaParser(BaseParser):
     BASE_URL = 'https://auto.ria.com'
     BRANDS_URL = 'https://api.auto.ria.com/categories/1/marks'
@@ -125,7 +128,11 @@ class RiaUsedParser(BaseRiaParser):
                 first6 = round(int(adv_id[:7]), -1) // 10
                 adv_id = int(adv_id)
                 adv_url = self.ADV_URL.format(first4, first6, adv_id)
-                await self.parse_advertisement(client, adv_url)
+
+                try:
+                    await self.parse_advertisement(client, adv_url)
+                except Exception as e:
+                    logger.exception(e)
 
     async def parse_advertisement(self, client, adv_url):
         try:
@@ -139,14 +146,15 @@ class RiaUsedParser(BaseRiaParser):
             'seoLinkS',
             'seoLinkSX',
         ])
+        autoData = data['autoData']
 
         await self.adv_updater.update({
-            'id': data['autoData']['autoId'],
+            'id': autoData['autoId'],
             'is_new': False,
             'origin_url': get_absolute_url(data['linkToView'], self.BASE_URL),
             'name': data['title'].strip(),
             'model_id': data['modelId'],
-            'year': data['autoData']['year'],
+            'year': autoData.get('year'),
             'price': data['UAH'],
             'preview': preview,
         })
