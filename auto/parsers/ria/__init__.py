@@ -133,7 +133,7 @@ class RiaUsedParser(BaseRiaParser):
         except Exception:
             return
 
-        preview = get_first_for_keys(data['photoData'], keys=[
+        preview = get_first_for_keys(data.get('photoData', {}), keys=[
             'seoLinkF',
             'seoLinkM',
             'seoLinkS',
