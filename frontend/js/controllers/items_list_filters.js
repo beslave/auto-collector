@@ -6,8 +6,8 @@ module.exports = function ($scope, $rootScope, $filter, $resource, store, autoDa
     autoData.filters = store.get(STORE_KEY) || {};
     $scope.autoData = autoData;
 
-    var originalYearFrom = null,
-        originalYearTo = null;
+    var originalYearFrom = autoData.filters.yearFrom,
+        originalYearTo = autoData.filters.yearTo;
 
     $scope.updateFilters = function (sender) {
         if (sender == 'yearFrom') {

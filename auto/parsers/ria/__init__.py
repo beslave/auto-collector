@@ -1,9 +1,14 @@
+import logging
+
 from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.parse import urlencode
 
 from auto.parsers.base import BaseParser
 from auto.utils import get_absolute_url, parse_int
+
+
+logger = logging.getLogger('auto.parsers.ria')
 
 
 class Parser(BaseParser):
@@ -55,7 +60,7 @@ class Parser(BaseParser):
         while page_url and retries < self.MAX_RETRIES:
             try:
                 async with client.get(page_url) as response:
-                    list_html = await response.text()
+                    list_html = await response.read()
 
                 page_url = None
                 soup = BeautifulSoup(list_html, 'html.parser')
