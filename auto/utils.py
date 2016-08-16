@@ -20,6 +20,12 @@ def parse_int(value):
         return int(value)
 
 
+def get_first_for_keys(data, keys=[]):
+    for key in keys:
+        if key in data:
+            return data[key]
+
+
 async def shorten_url(url):
     if settings.SHORTENER_API_KEY and url and len(url) > 32:
         params = {'longUrl': url}

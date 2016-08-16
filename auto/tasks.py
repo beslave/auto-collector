@@ -12,22 +12,19 @@ from auto.parsers import get_parsers
 logger = logging.getLogger('auto.tasks')
 
 
-async def sync_data():
-    for parser in get_parsers():
-        await parser.parse()
+def get_parser_task(parser):
+    async def parser_task():
+        while True:
+            try:
+                await parser.parse()
+            except Exception as e:
+                logger.exception(e)
+
+            await asyncio.sleep(settings.SYNC_TIMEOUT)
+
+    return parser_task
 
 
-async def sync_data_task():
-    while True:
-        logger.debug('{:=^40}'.format(' SYNC DATA '))
-        try:
-            await sync_data()
-        except Exception as e:
-            logger.exception(e)
-
-        await asyncio.sleep(settings.SYNC_TIMEOUT)
-
-
-tasks = [
-    sync_data_task,
+parser_tasks = [get_parser_task(parser) for parser in get_parsers()]
+tasks = parser_tasks + [
 ]

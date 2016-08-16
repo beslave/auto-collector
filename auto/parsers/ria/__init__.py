@@ -1,19 +1,48 @@
 import logging
 
 from bs4 import BeautifulSoup
-from datetime import datetime
 from urllib.parse import urlencode
 
+from auto import settings
 from auto.parsers.base import BaseParser
-from auto.utils import get_absolute_url, parse_int
+from auto.utils import get_absolute_url, get_first_for_keys, parse_int
 
 
-logger = logging.getLogger('auto.parsers.ria')
-
-
-class Parser(BaseParser):
-    NAME = 'ria'
+class BaseRiaParser(BaseParser):
     BASE_URL = 'https://auto.ria.com'
+    BRANDS_URL = 'https://api.auto.ria.com/categories/1/marks'
+    MODELS_URL = 'https://api.auto.ria.com/categories/1/marks/{brand}/models'
+
+    async def parse_brands(self, client):
+        brands = await self.get_attempts(client, self.BRANDS_URL)
+
+        for data in brands:
+            await self.brand_updater.update({
+                'origin': self.ORIGIN,
+                'id': data['value'],
+                'name': data['name'],
+            })
+
+    async def parse_models(self, client):
+        for brand_id in self.brand_updater:
+            models_url = self.MODELS_URL.format(brand=brand_id)
+
+            try:
+                models = await self.get_attempts(client, models_url)
+            except Exception as e:
+                continue
+
+            for data in models:
+                await self.model_updater.update({
+                    'origin': self.ORIGIN,
+                    'id': data['value'],
+                    'brand_id': brand_id,
+                    'name': data['name'],
+                })
+
+
+class RiaNewParser(BaseRiaParser):
+    ORIGIN = 'ria-new'
     BASE_LIST_PAGE = 'https://auto.ria.com/newauto_blocks/search?' + urlencode({
         'catalog_name': 'category',
         'category_id': 1,
@@ -24,52 +53,18 @@ class Parser(BaseParser):
         't': 'newdesign/search/search',
         'target': 'newauto_category',
     })
-    BRANDS_URL = 'https://api.auto.ria.com/categories/1/marks'
-    MODELS_URL = 'https://api.auto.ria.com/categories/1/marks/{brand}/models'
-
-    async def parse_brands(self, client):
-        async with client.get(self.BRANDS_URL) as response:
-            brands = await response.json()
-
-        for data in brands:
-            await self.brand_updater.update({
-                'origin': self.NAME,
-                'id': data['value'],
-                'name': data['name'],
-                'updated_at': datetime.now(),
-            })
-
-    async def parse_models(self, client):
-        for brand_id in self.brand_updater:
-            MODELS_URL = self.MODELS_URL.format(brand=brand_id)
-            async with client.get(MODELS_URL) as response:
-                models = await response.json()
-
-            for data in models:
-                await self.model_updater.update({
-                    'origin': self.NAME,
-                    'id': data['value'],
-                    'brand_id': brand_id,
-                    'name': data['name'],
-                    'updated_at': datetime.now(),
-                })
 
     async def parse_advertisements(self, client):
         page_url = self.BASE_LIST_PAGE
-        retries = 0
-        while page_url and retries < self.MAX_RETRIES:
+        while page_url:
             try:
-                async with client.get(page_url) as response:
-                    list_html = await response.read()
-
-                page_url = None
-                soup = BeautifulSoup(list_html, 'html.parser')
+                list_html = await self.get_attempts(client, page_url, getter='read')
             except Exception as e:
-                logger.exception(e)
-                retries += 1
-                continue
+                break
 
-            retries = 0
+            soup = BeautifulSoup(list_html, 'html.parser')
+            page_url = None
+
             for adv_data in self.iter_advertisements(soup):
                 await self.adv_updater.update(adv_data)
 
@@ -92,15 +87,66 @@ class Parser(BaseParser):
             yield {
                 'id': parse_int(name_element.attrs.get('auto_id')),
                 'is_new': True,
-                'origin': self.NAME,
+                'origin': self.ORIGIN,
                 'origin_url': origin_url,
                 'name': name_element.text.strip(),
                 'model_id': name_element.attrs.get('model_id'),
                 'year': parse_int(year_element.text),
                 'price': parse_int(price_element.text),
-                'updated_at': datetime.now(),
                 'preview': preview,
                 # 'autosalon_id': name_element.attrs.get('autosalon_id'),
                 # 'marka_id': name_element.attrs.get('marka_id'),
                 # 'complectation_id': name_element.attrs.get('complete_id'),
             }
+
+
+class RiaUsedParser(BaseRiaParser):
+    ORIGIN = 'ria-used'
+    BASE_LIST_PAGE = 'https://s-ua.auto.ria.com/blocks_search_ajax/search/?' + urlencode({
+        'countpage': 100,
+    })
+    ADV_URL = 'https://c-ua1.riastatic.com/demo/bu/searchPage/v2/view/auto/{}/{}/{}?lang_id=2'
+
+    async def parse_advertisements(self, client):
+        page = 1
+        retries = 0
+        while True:
+            page_url = self.BASE_LIST_PAGE + '&page={}'.format(page)
+            page += 1
+
+            try:
+                result = await self.get_attempts(client, page_url)
+                ids = result['result']['search_result']['ids']
+            except Exception as e:
+                continue
+
+            for adv_id in ids:
+                first4 = round(int(adv_id[:5]), -1) // 10
+                first6 = round(int(adv_id[:7]), -1) // 10
+                adv_id = int(adv_id)
+                adv_url = self.ADV_URL.format(first4, first6, adv_id)
+                await self.parse_advertisement(client, adv_url)
+
+    async def parse_advertisement(self, client, adv_url):
+        try:
+            data = await self.get_attempts(client, adv_url)
+        except Exception:
+            return
+
+        preview = get_first_for_keys(data['photoData'], keys=[
+            'seoLinkF',
+            'seoLinkM',
+            'seoLinkS',
+            'seoLinkSX',
+        ])
+
+        await self.adv_updater.update({
+            'id': data['autoData']['autoId'],
+            'is_new': False,
+            'origin_url': get_absolute_url(data['linkToView'], self.BASE_URL),
+            'name': data['title'].strip(),
+            'model_id': data['modelId'],
+            'year': data['autoData']['year'],
+            'price': data['UAH'],
+            'preview': preview,
+        })
