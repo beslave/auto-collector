@@ -9,6 +9,8 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
     var number = $filter('number');
 
     $scope.items = [];
+    $scope.filteredItems = [];
+    $scope.limitedItems = [];
     $scope.showItemsCount = PER_PAGE;
 
     var avg = function (values) {
@@ -92,29 +94,35 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
             $scope.items.push(item);
         });
 
-        $scope.filteredItems = $filter('orderBy')($scope.items, 'name');
-        $scope.filteredItems = $filter('limitTo')($scope.filteredItems, $scope.showItemsCount);
+        $scope.filteredItems = $filter('orderBy')($scope.items, 'price_avg');
+        $scope.limitedItems = $filter('limitTo')($scope.filteredItems, $scope.showItemsCount);
 
+        loadExtraItems();
         $scope.$apply();
     }, 500);
 
-    var loadExtraItems = function (timeout) {
-        setTimeout(function () {
-            if ($scope.showItemsCount >= $scope.items.length) {
-                return;
-            }
+    var loadExtraItems = utils.debounce(function () {
+        if ($scope.showItemsCount >= $scope.filteredItems.length) {
+            return;
+        }
 
-            var itemElements = document.querySelectorAll('.js-list-item');
-            var lastItemElement = itemElements[itemElements.length - 1];
-            var bottom = lastItemElement && lastItemElement.getBoundingClientRect().bottom;
-            if (bottom - window.innerHeight < SCROLL_THRESHOLD) {
-                $scope.showItemsCount += PER_PAGE;
-                $scope.$applyAsync();
-                loadExtraItems(500);
-            }
-        }, timeout || 0);
-    };
+        var itemElements = document.querySelectorAll('.js-list-item');
+        var lastItemElement = itemElements[itemElements.length - 1];
+        var bottom = lastItemElement && lastItemElement.getBoundingClientRect().bottom;
+        if (bottom - window.innerHeight < SCROLL_THRESHOLD) {
+            $scope.showItemsCount += PER_PAGE;
+            $scope.limitedItems = $filter('limitTo')($scope.filteredItems, $scope.showItemsCount);
+            $scope.$applyAsync();
+            loadExtraItems(500);
+        }
+    }, 100);
 
+    function resetItems() {
+        $scope.showItemsCount = PER_PAGE;
+
+        updateItems();
+    }
+    $scope.$on('autoDataChanged', resetItems);
     $http.get('/').then(function (response) {
         var fields = response.data.fields;
         advertisements = response.data.rows.map(function (row) {
@@ -124,16 +132,8 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
             });
             return adv;
         });
-        updateItems();
+        resetItems();
     });
-
-    function resetItems() {
-        $scope.showItemsCount = PER_PAGE;
-
-        updateItems();
-        loadExtraItems();
-    }
-    $scope.$on('autoDataChanged', resetItems);
 
     loadExtraItems();
     angular.element($window).bind('scroll', loadExtraItems);

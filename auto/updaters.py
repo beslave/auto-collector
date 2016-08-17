@@ -22,15 +22,17 @@ class Updater:
     async def new(cls, *args, **kwargs):
         self = cls(*args, **kwargs)
 
+        async def get_condition_cache(rows):
+            cache = {}
+            async for row in rows:
+                cache[getattr(row, self.pk_field)] = [
+                    getattr(row, field) for field in self.condition_fields
+                ]
+            return cache
+
         fields = list(set([self.pk_field] + self.condition_fields))
         query = select(getattr(self.table.c, field) for field in fields)
-        self.cache = await make_db_query(self.complete_query(query), lambda rows: {
-            getattr(row, self.pk_field): [
-                getattr(row, field)
-                for field in self.condition_fields
-            ]
-            for row in rows
-        })
+        self.cache = await make_db_query(self.complete_query(query), get_condition_cache)
         self.not_updated = set(self.cache.keys())
         return self
 
@@ -101,8 +103,9 @@ class Updater:
 
         query = self.table.insert().values(**data)
 
-        def get_insert_id(rows):
-            return getattr([x for x in rows][0], self.pk_field)
+        async def get_insert_id(rows):
+            async for row in rows:
+                return getattr(row, self.pk_field)
 
         try:
             if not pk:

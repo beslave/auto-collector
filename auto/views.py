@@ -43,9 +43,14 @@ class IndexView(BaseApiView):
             .where(self.table.c.price > 0)
             .order_by(self.table.c.price)
         )
+
+        rows_data = []
+        async for row in rows:
+            rows_data.append(row.as_tuple())
+
         return {
             'fields': fields,
-            'rows': list(row.as_tuple() for row in rows),
+            'rows': rows_data,
         }
 
 
@@ -77,9 +82,11 @@ class ModelView(BaseApiView):
             .where(self.adv_table.c.price > 0)
             .order_by(self.adv_table.c.price)
         )
-        adv_rows = list(await connection.execute(query))
+        rows = await connection.execute(query)
 
-        advertisements = [dict(row) for row in adv_rows]
+        advertisements = []
+        async for row in rows:
+            advertisements.append(dict(row))
 
         return {
             'brand': dict(brand),

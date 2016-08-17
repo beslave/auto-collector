@@ -1,10 +1,10 @@
 <div class="row">
 {% raw %}
-    <p class="col-xs-12 text-warning item" ng-show="filteredItems.length === 0">
+    <p class="col-xs-12 text-warning item" ng-show="limitedItems.length === 0">
         Немає оголошень що задовільняють обрані параметри пошуку
     </p>
     <a class="col-lg-4 col-md-6 col-sm-12 col-xs-12 item js-list-item"
-        ng-repeat="item in filteredItems"
+        ng-repeat="item in limitedItems"
         ng-href="{{ item.url }}"
     >
         <img class="img-responsive img-thumbnail item_image" ng-src="{{ item.preview }}" />

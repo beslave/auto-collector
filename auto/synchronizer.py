@@ -25,6 +25,11 @@ origin_brand_table = OriginBrand.__table__
 origin_model_table = OriginModel.__table__
 
 
+async def get_real_instance(rows):
+    async for row in rows:
+        return row.real_instance
+
+
 class BrandsUpdater(SynchronizerUpdater):
     table = brand_table
     sync_fields = ['name']
@@ -37,7 +42,7 @@ class ModelsUpdater(SynchronizerUpdater):
     async def preprocess_data(self, data):
         data = await super().preprocess_data(data)
         query = origin_brand_table.select().where(origin_brand_table.c.id == data['brand_id'])
-        data['brand_id'] = await make_db_query(query, lambda rows: [x for x in rows][0].real_instance)
+        data['brand_id'] = await make_db_query(query, get_real_instance)
         return data
 
 
@@ -51,7 +56,7 @@ class AdvertisementsUpdater(SynchronizerUpdater):
     async def preprocess_data(self, data):
         data = await super().preprocess_data(data)
         query = origin_model_table.select().where(origin_model_table.c.id == data['model_id'])
-        data['model_id'] = await make_db_query(query, lambda rows: [x for x in rows][0].real_instance)
+        data['model_id'] = await make_db_query(query, get_real_instance)
         return data
 
 
@@ -91,7 +96,7 @@ class Synchronizer:
     async def sync(self, connection, origin_table, updater):
         rows = await connection.execute(origin_table.select())
 
-        for row in rows:
+        async for row in rows:
             data = dict(row)
             prev_real_instance = data['real_instance']
             data['id'] = data['real_instance']

@@ -55,6 +55,6 @@ async def make_db_query(query, processor=None):
             results = await connection.execute(query)
 
             if processor:
-                return processor(results)
+                return await processor(results)
 
             return results
