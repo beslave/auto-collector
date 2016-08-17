@@ -26,6 +26,12 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
         var filterBrandId = autoData.filters.brand && autoData.filters.brand.id;
         var filterModelId = autoData.filters.model && autoData.filters.model.id;
 
+        if (!autoData.filters.isNew && adv.is_new) {
+            return false;
+        }
+        if (!autoData.filters.isUsed && !adv.is_new) {
+            return false;
+        }
         if (autoData.filters.yearFrom && adv.year < autoData.filters.yearFrom) {
             return false;
         }
@@ -85,6 +91,10 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
 
             $scope.items.push(item);
         });
+
+        $scope.filteredItems = $filter('orderBy')($scope.items, 'name');
+        $scope.filteredItems = $filter('limitTo')($scope.filteredItems, $scope.showItemsCount);
+
         $scope.$apply();
     }, 500);
 

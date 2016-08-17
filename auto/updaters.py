@@ -48,7 +48,7 @@ class Updater:
     def complete_query(self, query):
         return query
 
-    def get_update_probability(self, **kwargs):
+    def get_update_probability(self, data, **kwargs):
         return 0
 
     def get_condition_data(self, pk):
@@ -81,7 +81,7 @@ class Updater:
             return await self.create(data)
 
         conditions = self.get_condition_data(pk)
-        update_probability = self.get_update_probability(**conditions)
+        update_probability = self.get_update_probability(data, **conditions)
 
         if update_probability >= random():
             query = self.table.update().values(**data).where(self.table.c.id == pk)
@@ -146,32 +146,12 @@ class UpdaterWithDates(Updater):
         return data
 
 
-class UpdaterByCreatedAt(UpdaterWithDates):
-    threshold = 60 * 60 * 24
-
-    def __init__(self, *args, **kwargs):
-        if self.created_at_field not in self.condition_fields:
-            self.condition_fields.append(self.created_at_field)
-
-        return super().__init__(*args, **kwargs)
-
-    def get_update_probability(self, created_at=None, **kwargs):
-        if not created_at:
-            return 1.0
-
-        delta_seconds = (datetime.now() - created_at).total_seconds()
-
-        if delta_seconds < self.threshold:
-            return delta_seconds / self.threshold
-        else:
-            return self.threshold / delta_seconds
-
-
-class OriginUpdater(UpdaterByCreatedAt):
+class OriginUpdater(UpdaterWithDates):
     origin_field = 'origin'
+    origin = None
 
-    def __init__(self, origin, *args, **kwargs):
-        self.origin = origin
+    def __init__(self, origin=None, *args, **kwargs):
+        self.origin = origin or self.origin
         super().__init__(*args, **kwargs)
 
     def complete_query(self, query):
@@ -193,7 +173,7 @@ class SynchronizerUpdater(UpdaterWithDates):
     comparable_fields = ['name',]
     sync_fields = []
 
-    def get_update_probability(self, **kwargs):
+    def get_update_probability(self, data, **kwargs):
         return 0
 
     def get_pk_for_data(self, data):
@@ -210,3 +190,33 @@ class SynchronizerUpdater(UpdaterWithDates):
         }
         data[self.pk_field] = pk
         return await super().preprocess_data(data)
+
+
+class UpdateNotSimilarMixin:
+    def get_update_probability(self, data, **conditions):
+        for condition, value in conditions.items():
+            if data[condition] != value:
+                return 1
+
+        return 0
+
+
+class UpdateByCreatedAtMixin:
+    threshold = 60 * 60 * 24
+
+    def __init__(self, *args, **kwargs):
+        if self.created_at_field not in self.condition_fields:
+            self.condition_fields.append(self.created_at_field)
+
+        return super().__init__(*args, **kwargs)
+
+    def get_update_probability(self, data, created_at=None, **kwargs):
+        if not created_at:
+            return 1.0
+
+        delta_seconds = (datetime.now() - created_at).total_seconds()
+
+        if delta_seconds < self.threshold:
+            return delta_seconds / self.threshold
+        else:
+            return self.threshold / delta_seconds

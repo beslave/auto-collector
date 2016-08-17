@@ -7,10 +7,28 @@ from auto.models import (
     OriginBrand,
     OriginModel,
 )
-from auto.updaters import OriginUpdater
+from auto.updaters import (
+    OriginUpdater,
+    UpdateByCreatedAtMixin,
+    UpdateNotSimilarMixin,
+)
 
 
 logger = logging.getLogger('auto.parsers.base')
+
+
+class OriginBrandUpdater(UpdateNotSimilarMixin, OriginUpdater):
+    table = OriginBrand.__table__
+    condition_fields = ['name']
+
+
+class OriginModelUpdater(UpdateNotSimilarMixin, OriginUpdater):
+    table = OriginModel.__table__
+    condition_fields = ['name']
+
+
+class OriginAdvertisementUpdater(UpdateByCreatedAtMixin, OriginUpdater):
+    table = OriginAdvertisement.__table__
 
 
 class BaseParser(object):
@@ -46,9 +64,9 @@ class BaseParser(object):
         if getattr(self, 'is_initialized', False):
             return
 
-        self.brand_updater = await OriginUpdater.new(self.ORIGIN, self.brand_table)
-        self.model_updater = await OriginUpdater.new(self.ORIGIN, self.model_table)
-        self.adv_updater = await OriginUpdater.new(self.ORIGIN, self.advertisement_table)
+        self.brand_updater = await OriginBrandUpdater.new(self.ORIGIN)
+        self.model_updater = await OriginModelUpdater.new(self.ORIGIN)
+        self.adv_updater = await OriginAdvertisementUpdater.new(self.ORIGIN)
         self.is_initialized = True
 
     async def parse(self):

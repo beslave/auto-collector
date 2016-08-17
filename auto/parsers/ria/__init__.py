@@ -1,6 +1,8 @@
+import asyncio
 import logging
 
 from bs4 import BeautifulSoup
+from concurrent.futures import ProcessPoolExecutor
 from urllib.parse import urlencode
 
 from auto import settings
@@ -9,6 +11,8 @@ from auto.utils import get_absolute_url, get_first_for_keys, parse_int
 
 
 logger = logging.getLogger('auto.parsers.ria')
+executor = ProcessPoolExecutor()
+loop = asyncio.get_event_loop()
 
 
 class BaseRiaParser(BaseParser):
@@ -44,6 +48,41 @@ class BaseRiaParser(BaseParser):
                 })
 
 
+def parse_advertisements_list_html(list_html):
+    data = []
+    soup = BeautifulSoup(list_html, 'html.parser')
+
+    for adv_element in soup.select('.ticket-item-newauto'):
+        name_element = adv_element.select('.name a')[0]
+        year_element = adv_element.select('.year')[0]
+        price_element = adv_element.select('.block-price strong')[0]
+        photo_element = adv_element.select('.block-photo img')[0]
+
+        origin_url = name_element.attrs['href']
+        origin_url = get_absolute_url(origin_url, RiaNewParser.BASE_URL)
+        preview = photo_element.attrs.get('src', '').strip()
+        preview = get_absolute_url(preview, RiaNewParser.BASE_URL)
+        data.append({
+            'id': parse_int(name_element.attrs.get('auto_id')),
+            'is_new': True,
+            'origin': RiaNewParser.ORIGIN,
+            'origin_url': origin_url,
+            'name': name_element.text.strip(),
+            'model_id': name_element.attrs.get('model_id'),
+            'year': parse_int(year_element.text),
+            'price': parse_int(price_element.text),
+            'preview': preview,
+            # 'autosalon_id': name_element.attrs.get('autosalon_id'),
+            # 'marka_id': name_element.attrs.get('marka_id'),
+            # 'complectation_id': name_element.attrs.get('complete_id'),
+        })
+
+    next_link = soup.select('.pagination .show-more.fl-r')
+    next_page = next_link and next_link[0].attrs['page']
+
+    return data, next_page
+
+
 class RiaNewParser(BaseRiaParser):
     ORIGIN = 'ria-new'
     BASE_LIST_PAGE = 'https://auto.ria.com/newauto_blocks/search?' + urlencode({
@@ -65,42 +104,16 @@ class RiaNewParser(BaseRiaParser):
             except Exception as e:
                 break
 
-            soup = BeautifulSoup(list_html, 'html.parser')
-            page_url = None
+            advertisements, next_page = await loop.run_in_executor(
+                executor,
+                parse_advertisements_list_html,
+                list_html,
+            )
 
-            for adv_data in self.iter_advertisements(soup):
+            for adv_data in advertisements:
                 await self.adv_updater.update(adv_data)
 
-            next_link = soup.select('.pagination .show-more.fl-r')
-            if next_link:
-                next_page = next_link[0].attrs['page']
-                page_url = self.BASE_LIST_PAGE + '&page=' + next_page
-
-    def iter_advertisements(self, soup):
-        for adv_element in soup.select('.ticket-item-newauto'):
-            name_element = adv_element.select('.name a')[0]
-            year_element = adv_element.select('.year')[0]
-            price_element = adv_element.select('.block-price strong')[0]
-            photo_element = adv_element.select('.block-photo img')[0]
-
-            origin_url = name_element.attrs['href']
-            origin_url = get_absolute_url(origin_url, self.BASE_URL)
-            preview = photo_element.attrs.get('src', '').strip()
-            preview = get_absolute_url(preview, self.BASE_URL)
-            yield {
-                'id': parse_int(name_element.attrs.get('auto_id')),
-                'is_new': True,
-                'origin': self.ORIGIN,
-                'origin_url': origin_url,
-                'name': name_element.text.strip(),
-                'model_id': name_element.attrs.get('model_id'),
-                'year': parse_int(year_element.text),
-                'price': parse_int(price_element.text),
-                'preview': preview,
-                # 'autosalon_id': name_element.attrs.get('autosalon_id'),
-                # 'marka_id': name_element.attrs.get('marka_id'),
-                # 'complectation_id': name_element.attrs.get('complete_id'),
-            }
+            page_url = next_page and self.BASE_LIST_PAGE + '&page=' + next_page
 
 
 class RiaUsedParser(BaseRiaParser):
