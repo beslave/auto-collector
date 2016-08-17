@@ -44,7 +44,7 @@ class ModelsUpdater(SynchronizerUpdater):
 class AdvertisementsUpdater(SynchronizerUpdater):
     table = advertisement_table
     condition_fields = ['id', 'name', 'created_at', 'updated_at']
-    sync_fields = ['name', 'model_id', 'is_new', 'year', 'price', 'preview']
+    sync_fields = ['name', 'model_id', 'is_new', 'year', 'price', 'origin_url', 'preview']
     shorten_url_fields = ['origin_url', 'preview']
     comparable_fields = ['id']
 
