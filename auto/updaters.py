@@ -108,7 +108,7 @@ class Updater:
             except IntegrityError as e:
                 logger.warning(self.get_log_message(e))
 
-        return pk
+        return data
 
     async def create(self, data):
         pk = data[self.pk_field]
@@ -131,7 +131,7 @@ class Updater:
             data[self.pk_field] = pk
             self.cache[pk] = [data.get(x) for x in self.cache_fields]
             logger.debug(self.get_log_message('{}: Create #{}', self.table.name, pk))
-            return pk
+            return data
         except IntegrityError as e:
             logger.warning(e)
 

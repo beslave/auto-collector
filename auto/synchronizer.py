@@ -25,9 +25,9 @@ origin_brand_table = OriginBrand.__table__
 origin_model_table = OriginModel.__table__
 
 
-async def get_real_instance(rows):
+async def get_first_row(rows):
     async for row in rows:
-        return row.real_instance
+        return row
 
 
 class BrandsUpdater(SynchronizerUpdater):
@@ -45,7 +45,8 @@ class ModelsUpdater(SynchronizerUpdater):
         query = origin_brand_table.select().where(
             origin_brand_table.c.id == data['brand_id']
         )
-        data['brand_id'] = await make_db_query(query, get_real_instance)
+        brand = await make_db_query(query, get_first_row)
+        data['brand_id'] = brand.real_instance
         return data
 
 
@@ -66,8 +67,13 @@ class AdvertisementsUpdater(SynchronizerUpdater):
     async def preprocess_data(self, data):
         data = await super().preprocess_data(data)
         query = origin_model_table.select().where(origin_model_table.c.id == data['model_id'])
-        data['model_id'] = await make_db_query(query, get_real_instance)
+        model = await make_db_query(query, get_first_row)
+        data['model_id'] = model.real_instance
         return data
+
+    async def create(self, data):
+        object_data = await super().create(data)
+        return object_data
 
 
 class Synchronizer:
@@ -111,7 +117,8 @@ class Synchronizer:
             prev_real_instance = data['real_instance']
             data['id'] = data['real_instance']
             del data['real_instance']
-            pk = await updater.update(data)
+            object_data = await updater.update(data)
+            pk = object_data['id']
 
             if prev_real_instance != pk:
                 await connection.execute(
