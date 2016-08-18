@@ -7,7 +7,11 @@
         ng-repeat="item in limitedItems"
         ng-href="{{ item.url }}"
     >
-        <img class="img-responsive img-thumbnail item_image" ng-src="{{ item.preview }}" />
+        <div class="item_image img-responsive img-thumbnail">
+            <div class="item_image-src"
+                ng-style="{'background-image': 'url(\'{{ item.preview }}\')'}"
+            ></div>
+        </div>
         <span class="item_title">{{ item.title }}</span>
         <span class="item_price">{{ item.price }}</span>
     </a>

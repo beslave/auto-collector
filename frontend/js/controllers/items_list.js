@@ -98,7 +98,7 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
         $scope.limitedItems = $filter('limitTo')($scope.filteredItems, $scope.showItemsCount);
 
         loadExtraItems();
-        $scope.$apply();
+        $scope.$applyAsync();
     }, 500);
 
     var loadExtraItems = utils.debounce(function () {
@@ -113,9 +113,9 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
             $scope.showItemsCount += PER_PAGE;
             $scope.limitedItems = $filter('limitTo')($scope.filteredItems, $scope.showItemsCount);
             $scope.$applyAsync();
-            loadExtraItems(500);
+            loadExtraItems();
         }
-    }, 100);
+    }, 0);
 
     function resetItems() {
         $scope.showItemsCount = PER_PAGE;
