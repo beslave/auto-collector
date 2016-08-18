@@ -37,19 +37,29 @@ class BrandsUpdater(SynchronizerUpdater):
 
 class ModelsUpdater(SynchronizerUpdater):
     table = model_table
+    comparable_fields = ['name', 'brand_id']
     sync_fields = ['name', 'brand_id']
 
     async def preprocess_data(self, data):
         data = await super().preprocess_data(data)
-        query = origin_brand_table.select().where(origin_brand_table.c.id == data['brand_id'])
+        query = origin_brand_table.select().where(
+            origin_brand_table.c.id == data['brand_id']
+        )
         data['brand_id'] = await make_db_query(query, get_real_instance)
         return data
 
 
 class AdvertisementsUpdater(SynchronizerUpdater):
     table = advertisement_table
-    condition_fields = ['id', 'name', 'created_at', 'updated_at']
-    sync_fields = ['name', 'model_id', 'is_new', 'year', 'price', 'origin_url', 'preview']
+    sync_fields = [
+        'name',
+        'model_id',
+        'is_new',
+        'year',
+        'price',
+        'origin_url',
+        'preview',
+    ]
     shorten_url_fields = ['origin_url', 'preview']
     comparable_fields = ['id']
 

@@ -1,6 +1,7 @@
 import logging
 
 from datetime import datetime
+from functools import reduce
 from psycopg2 import IntegrityError
 from random import random
 from sqlalchemy.sql import select
@@ -16,23 +17,26 @@ class Updater:
     pk_field = 'id'
     condition_fields = []
     shorten_url_fields = []
+    cache_fieldsets = ['condition_fields']
     table = None
 
     @classmethod
     async def new(cls, *args, **kwargs):
         self = cls(*args, **kwargs)
+        self.cache_fields = self.get_cache_fields()
 
-        async def get_condition_cache(rows):
+        async def get_cache_data(rows):
             cache = {}
             async for row in rows:
                 cache[getattr(row, self.pk_field)] = [
-                    getattr(row, field) for field in self.condition_fields
+                    getattr(row, field) for field in self.cache_fields
                 ]
             return cache
 
-        fields = list(set([self.pk_field] + self.condition_fields))
+        fields = list(set([self.pk_field] + self.cache_fields))
         query = select(getattr(self.table.c, field) for field in fields)
-        self.cache = await make_db_query(self.complete_query(query), get_condition_cache)
+        query = self.complete_query(query)
+        self.cache = await make_db_query(query, get_cache_data)
         self.not_updated = set(self.cache.keys())
         return self
 
@@ -53,8 +57,19 @@ class Updater:
     def get_update_probability(self, data, **kwargs):
         return 0
 
+    def get_cache_fields(self):
+        return list(set(reduce(
+            lambda x, y: x + getattr(self, y),
+            self.cache_fieldsets,
+            [],
+        )))
+
+    def get_cache_data(self, pk):
+        return dict(zip(self.cache_fields, self.cache[pk]))
+
     def get_condition_data(self, pk):
-        return dict(zip(self.condition_fields, self.cache[pk]))
+        cache = self.get_cache_data(pk)
+        return {x: cache[x] for x in self.condition_fields}
 
     async def preprocess_data(self, data):
         processed = {}
@@ -114,7 +129,7 @@ class Updater:
                 await make_db_query(query)
 
             data[self.pk_field] = pk
-            self.cache[pk] = [data.get(x) for x in self.condition_fields]
+            self.cache[pk] = [data.get(x) for x in self.cache_fields]
             logger.debug(self.get_log_message('{}: Create #{}', self.table.name, pk))
             return pk
         except IntegrityError as e:
@@ -129,7 +144,11 @@ class Updater:
             for pk in self.not_updated:
                 self.cache.pop(pk, None)
 
-            msg = self.get_log_message('{}: {} objects were removed!', self.table.name, len(self.not_updated))
+            msg = self.get_log_message(
+                '{}: {} objects were removed!',
+                self.table.name,
+                len(self.not_updated),
+            )
             logger.debug(msg)
 
         self.not_updated = set(self.cache.keys())
@@ -138,6 +157,11 @@ class Updater:
 class UpdaterWithDates(Updater):
     created_at_field = 'created_at'
     updated_at_field = 'updated_at'
+
+    def get_cache_fields(self):
+        fields = super().get_cache_fields()
+        fields = set(fields + [self.created_at_field, self.updated_at_field])
+        return list(fields)
 
     async def create(self, data):
         data[self.created_at_field] = datetime.now()
@@ -172,17 +196,17 @@ class OriginUpdater(UpdaterWithDates):
 
 
 class SynchronizerUpdater(UpdaterWithDates):
-    condition_fields = ['name', 'created_at', 'updated_at']
-    comparable_fields = ['name',]
+    comparable_fields = ['name']
     sync_fields = []
+    cache_fieldsets = ['condition_fields', 'comparable_fields']
 
     def get_update_probability(self, data, **kwargs):
         return 0
 
     def get_pk_for_data(self, data):
         for pk in self.cache:
-            condition_data = self.get_condition_data(pk)
-            if all(condition_data[field] == data[field] for field in self.comparable_fields):
+            cache = self.get_cache_data(pk)
+            if all(cache[field] == data[field] for field in self.comparable_fields):
                 return pk
 
     async def preprocess_data(self, data):
