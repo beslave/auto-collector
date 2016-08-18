@@ -38,7 +38,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="adv in advertisements|orderBy:ordering.by:ordering.reverse">
+        <tr ng-repeat="adv in filteredAdvertisements|orderBy:ordering.by:ordering.reverse">
             <td>
                 <a ng-href="{{ adv.origin_url }}" target="_blank">
                     {{ adv.name }}
