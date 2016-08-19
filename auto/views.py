@@ -21,7 +21,7 @@ class BaseApiView(web.View):
     template_name = 'index.html'
 
     async def get(self):
-        if not self.request.is_ajax:
+        if self.template_name and not self.request.is_ajax:
             return render_template(self.template_name, self.request, {})
 
         async with create_engine(**settings.DATABASE) as engine:
@@ -31,13 +31,27 @@ class BaseApiView(web.View):
         return web.json_response(data, dumps=smart_json_dumps)
 
 
-class IndexView(BaseApiView):
+class IndexView(web.View):
+    template_name = 'index.html'
+
+    async def get(self):
+        return render_template(self.template_name, self.request, {})
+
+
+class AutoDataView(BaseApiView):
     table = Advertisement.__table__
+    template_name = None
 
     PER_PAGE = 50
 
     async def get_json(self, connection):
-        fields = ['is_new', 'year', 'price', 'preview', 'origin_url', 'model_id']
+        fields = [
+            'id',
+            'is_new',
+            'year',
+            'price',
+            'model_id',
+        ]
         rows = await connection.execute(
             sa.select([getattr(self.table.c, f) for f in fields])
             .where(self.table.c.price > 0)
@@ -60,7 +74,7 @@ class ModelView(BaseApiView):
     adv_table = Advertisement.__table__
 
     async def get_json(self, connection):
-        model_id = int(self.request.match_info['model_id'])
+        model_id = int(self.request.match_info['pk'])
         model_result = await connection.execute(
             self.table.select()
             .where(self.table.c.id == model_id)
@@ -86,7 +100,13 @@ class ModelView(BaseApiView):
 
         advertisements = []
         async for row in rows:
-            advertisements.append(dict(row))
+            advertisements.append({
+                'id': row.id,
+                'name': row.name,
+                'price': row.price,
+                'year': row.year,
+                'preview': row.preview
+            })
 
         return {
             'brand': dict(brand),
@@ -102,7 +122,7 @@ class BrandListView(BaseApiView):
         join = sa.join(self.table, Model.__table__).join(Advertisement.__table__)
         adv_count = sa.func.count(Advertisement.__table__.c.id)
 
-        brands_result = await connection.execute(
+        rows = await connection.execute(
             self.table.select()
             .select_from(join)
             .where(Advertisement.__table__.c.price > 0)
@@ -110,10 +130,15 @@ class BrandListView(BaseApiView):
             .having(adv_count > 0)
             .order_by(self.table.c.id)
         )
-        return [{
-            'id': row.id,
-            'name': row.name
-        } for row in brands_result]
+
+        data = []
+        async for row in rows:
+            data.append({
+                'id': row.id,
+                'name': row.name
+            })
+
+        return data
 
 
 class ModelListView(BaseApiView):
@@ -122,7 +147,7 @@ class ModelListView(BaseApiView):
     async def get_json(self, connection):
         join = sa.join(self.table, Advertisement.__table__)
         adv_count = sa.func.count(Advertisement.__table__.c.id)
-        models_result = await connection.execute(
+        rows = await connection.execute(
             self.table.select()
             .select_from(join)
             .where(Advertisement.__table__.c.price > 0)
@@ -130,8 +155,39 @@ class ModelListView(BaseApiView):
             .having(adv_count > 0)
             .order_by(self.table.c.id)
         )
-        return [{
-            'id': row.id,
-            'name': row.name,
-            'brand_id': row.brand_id,
-        } for row in models_result]
+
+        data = []
+        async for row in rows:
+            data.append({
+                'id': row.id,
+                'name': row.name,
+                'brand_id': row.brand_id,
+            })
+
+        return data
+
+
+class BaseAdvertisementRedirectView(web.View):
+    table = Advertisement.__table__
+    cache = {}
+
+    async def get(self):
+        pk = int(self.request.match_info['pk'])
+        async with create_engine(**settings.DATABASE) as engine:
+            async with engine.acquire() as connection:
+                rows = await connection.execute(
+                    self.table.select().where(self.table.c.id == pk)
+                    .limit(1)
+                )
+                instance = await rows.fetchone()
+                self.cache[pk] = getattr(instance, self.redirect_field)
+
+        return web.HTTPFound(self.cache[pk])
+
+
+class RedirectToOriginView(BaseAdvertisementRedirectView):
+    redirect_field = 'origin_url'
+
+
+class AdvertisementPreviewView(BaseAdvertisementRedirectView):
+    redirect_field = 'preview'

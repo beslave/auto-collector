@@ -34,6 +34,10 @@ module.exports = function ($scope, $filter, $http, $location, store, autoData) {
         $location.path('/');
     };
 
+    $scope.getAdvertisementUrl = function (adv) {
+        return '/advertisement/' + adv.id + '/go/';
+    };
+
     function updateFilters () {
         var filtered = $scope.advertisements;
 
