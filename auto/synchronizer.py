@@ -41,13 +41,12 @@ class ModelsUpdater(SynchronizerUpdater):
     sync_fields = ['name', 'brand_id']
 
     async def preprocess_data(self, data):
-        data = await super().preprocess_data(data)
         query = origin_brand_table.select().where(
             origin_brand_table.c.id == data['brand_id']
         )
         brand = await make_db_query(query, get_first_row)
         data['brand_id'] = brand.real_instance
-        return data
+        return await super().preprocess_data(data)
 
 
 class AdvertisementsUpdater(SynchronizerUpdater):
@@ -65,11 +64,10 @@ class AdvertisementsUpdater(SynchronizerUpdater):
     comparable_fields = ['id']
 
     async def preprocess_data(self, data):
-        data = await super().preprocess_data(data)
         query = origin_model_table.select().where(origin_model_table.c.id == data['model_id'])
         model = await make_db_query(query, get_first_row)
         data['model_id'] = model.real_instance
-        return data
+        return await super().preprocess_data(data)
 
     async def create(self, data):
         object_data = await super().create(data)
