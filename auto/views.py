@@ -99,6 +99,7 @@ class ModelView(BaseApiView):
         async for row in rows:
             advertisements.append({
                 'id': row.id,
+                'is_new': row.is_new,
                 'name': row.name,
                 'price': row.price,
                 'year': row.year,
