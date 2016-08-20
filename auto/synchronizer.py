@@ -1,9 +1,8 @@
 import asyncio
 import logging
 
-from aiopg.sa import create_engine
-
 from auto import settings
+from auto.connection import ConnectionManager
 from auto.models import (
     Advertisement,
     Brand,
@@ -94,16 +93,15 @@ class Synchronizer:
         await self.init_updaters()
 
         while True:
-            async with create_engine(**settings.DATABASE) as engine:
-                async with engine.acquire() as connection:
-                    logger.debug('Synchronize brands')
-                    await self.sync(connection, origin_brand_table, self.brands_updater)
+            async with ConnectionManager() as connection:
+                logger.debug('Synchronize brands')
+                await self.sync(connection, origin_brand_table, self.brands_updater)
 
-                    logger.debug('Synchronize models')
-                    await self.sync(connection, origin_model_table, self.models_updater)
+                logger.debug('Synchronize models')
+                await self.sync(connection, origin_model_table, self.models_updater)
 
-                    logger.debug('Synchronize advertisements')
-                    await self.sync(connection, origin_advertisement_table, self.advertisements_updater)
+                logger.debug('Synchronize advertisements')
+                await self.sync(connection, origin_advertisement_table, self.advertisements_updater)
 
             await asyncio.sleep(settings.SYNC_TIMEOUT)
 

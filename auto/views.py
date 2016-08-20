@@ -3,11 +3,10 @@ import sqlalchemy as sa
 
 from aiohttp import web
 from aiohttp_jinja2 import render_template
-from aiopg.sa import create_engine
-from datetime import datetime
 from functools import partial
 
 from auto import settings
+from auto.connection import ConnectionManager
 from auto.models import Advertisement, Brand, Model
 
 
@@ -24,9 +23,7 @@ class BaseApiView(web.View):
         if self.template_name and not self.request.is_ajax:
             return render_template(self.template_name, self.request, {})
 
-        async with create_engine(**settings.DATABASE) as engine:
-            async with engine.acquire() as connection:
-                data = await self.get_json(connection)
+        data = await self.get_json()
 
         return web.json_response(data, dumps=smart_json_dumps)
 
@@ -44,7 +41,7 @@ class AutoDataView(BaseApiView):
 
     PER_PAGE = 50
 
-    async def get_json(self, connection):
+    async def get_json(self):
         fields = [
             'id',
             'is_new',
@@ -52,7 +49,7 @@ class AutoDataView(BaseApiView):
             'price',
             'model_id',
         ]
-        rows = await connection.execute(
+        rows = await self.request.connection.execute(
             sa.select([getattr(self.table.c, f) for f in fields])
             .where(self.table.c.price > 0)
             .order_by(self.table.c.price)
@@ -73,16 +70,16 @@ class ModelView(BaseApiView):
     table = Model.__table__
     adv_table = Advertisement.__table__
 
-    async def get_json(self, connection):
+    async def get_json(self):
         model_id = int(self.request.match_info['pk'])
-        model_result = await connection.execute(
+        model_result = await self.request.connection.execute(
             self.table.select()
             .where(self.table.c.id == model_id)
             .limit(1)
         )
         model = await model_result.fetchone()
 
-        brand_result = await connection.execute(
+        brand_result = await self.request.connection.execute(
             self.brand_table.select()
             .where(self.brand_table.c.id == model.brand_id)
             .limit(1)
@@ -96,7 +93,7 @@ class ModelView(BaseApiView):
             .where(self.adv_table.c.price > 0)
             .order_by(self.adv_table.c.price)
         )
-        rows = await connection.execute(query)
+        rows = await self.request.connection.execute(query)
 
         advertisements = []
         async for row in rows:
@@ -118,11 +115,11 @@ class ModelView(BaseApiView):
 class BrandListView(BaseApiView):
     table = Brand.__table__
 
-    async def get_json(self, connection):
+    async def get_json(self):
         join = sa.join(self.table, Model.__table__).join(Advertisement.__table__)
         adv_count = sa.func.count(Advertisement.__table__.c.id)
 
-        rows = await connection.execute(
+        rows = await self.request.connection.execute(
             self.table.select()
             .select_from(join)
             .where(Advertisement.__table__.c.price > 0)
@@ -144,10 +141,10 @@ class BrandListView(BaseApiView):
 class ModelListView(BaseApiView):
     table = Model.__table__
 
-    async def get_json(self, connection):
+    async def get_json(self):
         join = sa.join(self.table, Advertisement.__table__)
         adv_count = sa.func.count(Advertisement.__table__.c.id)
-        rows = await connection.execute(
+        rows = await self.request.connection.execute(
             self.table.select()
             .select_from(join)
             .where(Advertisement.__table__.c.price > 0)
@@ -173,14 +170,12 @@ class BaseAdvertisementRedirectView(web.View):
 
     async def get(self):
         pk = int(self.request.match_info['pk'])
-        async with create_engine(**settings.DATABASE) as engine:
-            async with engine.acquire() as connection:
-                rows = await connection.execute(
-                    self.table.select().where(self.table.c.id == pk)
-                    .limit(1)
-                )
-                instance = await rows.fetchone()
-                self.cache[pk] = getattr(instance, self.redirect_field)
+        rows = await self.request.connection.execute(
+            self.table.select().where(self.table.c.id == pk)
+            .limit(1)
+        )
+        instance = await rows.fetchone()
+        self.cache[pk] = getattr(instance, self.redirect_field)
 
         return web.HTTPFound(self.cache[pk])
 

@@ -2,11 +2,10 @@ import aiohttp
 import asyncio
 import json
 
-from aiopg.sa import create_engine
-from contextlib import contextmanager
 from datetime import datetime
 
 from auto import settings
+from auto.connection import ConnectionManager
 
 
 def get_absolute_url(url, base_url):
@@ -50,11 +49,10 @@ async def shorten_url(url):
 
 
 async def make_db_query(query, processor=None):
-    async with create_engine(**settings.DATABASE) as engine:
-        async with engine.acquire() as connection:
-            results = await connection.execute(query)
+    async with ConnectionManager() as connection:
+        results = await connection.execute(query)
 
-            if processor:
-                return await processor(results)
+        if processor:
+            return await processor(results)
 
-            return results
+        return results
