@@ -16,14 +16,14 @@ DATABASE = {
 }
 
 if 'DATABASE_URL' in os.environ:
-    db_data = urlparse(os.environ['DATABASE_URL'])
+    url = urlparse(os.environ['DATABASE_URL'])
 
     DATABASE = {
-        'host': db_data.hostname,
-        'port': db_data.port,
-        'database': db_data.path.strip('/'),
-        'user': db_data.username,
-        'password': db_data.password,
+        'host': url.hostname,
+        'port': url.port,
+        'database': url.path[1:],
+        'user': url.username,
+        'password': url.password,
     }
 
 SITE_ADDR = '0.0.0.0'

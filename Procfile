@@ -1,1 +1,1 @@
-web:  python ./manage.py
+web:  alembic upgrade head & python ./manage.py
