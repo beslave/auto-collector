@@ -27,7 +27,7 @@ if 'DATABASE_URL' in os.environ:
     }
 
 SITE_ADDR = '0.0.0.0'
-SITE_PORT = 8080
+SITE_PORT = os.environ.get('PORT', 8080)
 
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'auto', 'templates')
 STATIC_URL = '/static'
