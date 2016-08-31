@@ -1,5 +1,8 @@
-import os.path
+import os
 import sys
+
+from urllib.parse import urlparse
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -11,6 +14,18 @@ DATABASE = {
     'user': 'postgres',
     'password': 'p0stgres',
 }
+
+if 'DATABASE_URL' in os.environ:
+    db_data = urlparse(os.environ['DATABASE_URL'])
+
+    DATABASE = {
+        'host': db_data.hostname,
+        'port': db_data.port,
+        'database': db_data.path.strip('/'),
+        'user': db_data.username,
+        'password': db_data.password,
+    }
+
 SITE_ADDR = '0.0.0.0'
 SITE_PORT = 8080
 
