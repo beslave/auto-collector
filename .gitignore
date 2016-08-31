@@ -8,7 +8,7 @@ __pycache__/
 *.mo
 *.pot
 
-.env
+/env
 settings_local.py
 
 /logs/*
@@ -17,3 +17,4 @@ settings_local.py
 !/frontend/.jshintrc
 
 !.gitkeep
+!.env

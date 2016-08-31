@@ -1,0 +1,8 @@
+{
+	"name": "Auto Collector",
+	"description": "Auto Collector",
+	"image": "heroku/python",
+	"repository": "https://github.com/beslave/auto-collector",
+	"keywords": ["python"],
+	"addons": ["heroku-postgresql"]
+}
