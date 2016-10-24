@@ -1,0 +1,24 @@
+# ln -sF deploy/deploy-compose.yml && ln -sF deploy/app/Dockerfile
+#
+version: '2'
+services:
+    db:
+        image: postgres:9
+        environment:
+            - POSTGRES_USER=auto_collector
+            - POSTGRES_PASSWORD=auto_collector
+            - POSTGRES_DB=auto_collector
+    frontend:
+        build:
+            context: .
+            dockerfile: Dockerfile.frontend
+        ports:
+            - "8081:80"
+    server:
+        build:
+            context: .
+            dockerfile: Dockerfile.server
+        depends_on:
+            - db
+        ports:
+            - "8080:80"

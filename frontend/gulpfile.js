@@ -61,6 +61,10 @@ gulp.task('clean', function() {
         .pipe(clean());
 });
 
+gulp.task('build', ['clean'], function() {
+    gulp.start('scss', 'js', 'images', 'templates');
+});
+
 gulp.task('default', ['clean'], function() {
     gulp.start('scss', 'js', 'images', 'templates', 'watch');
 });

@@ -8,11 +8,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 SYNC_TIMEOUT = 10
 DATABASE = {
-    'host': 'localhost',
+    'host': 'db',
     'port': 5432,
     'database': 'auto_collector',
-    'user': 'postgres',
-    'password': 'p0stgres',
+    'user': 'auto_collector',
+    'password': 'auto_collector',
 }
 
 if 'DATABASE_URL' in os.environ:
@@ -27,11 +27,10 @@ if 'DATABASE_URL' in os.environ:
     }
 
 SITE_ADDR = '0.0.0.0'
-SITE_PORT = os.environ.get('PORT', 8080)
+SITE_PORT = os.environ.get('PORT', 80)
 
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'auto', 'templates')
-STATIC_URL = '/static'
-STATIC_ROOT = os.path.join(BASE_DIR, 'frontend', 'static')
+STATIC_URL = '//127.0.0.1:8081/'
 
 SHORTENER_API_URL = 'https://www.googleapis.com/urlshortener/v1/url'
 SHORTENER_API_KEY = ''

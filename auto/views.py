@@ -2,7 +2,7 @@ import json
 import sqlalchemy as sa
 
 from aiohttp import web
-from aiohttp_jinja2 import render_template
+from aiohttp_jinja2 import render_template as jinja2_render_template
 from functools import partial
 
 from auto import settings
@@ -14,6 +14,16 @@ def json_serialize(obj):
     return str(obj)
 
 smart_json_dumps = partial(json.dumps, default=json_serialize)
+global_template_context = {
+    'settings': settings,
+    'static': lambda path: '{}{}'.format(settings.STATIC_URL, path),
+}
+
+
+def render_template(template_name, request, context):
+    context = dict(context)
+    context.update(global_template_context)
+    return jinja2_render_template(template_name, request, context)
 
 
 class BaseApiView(web.View):
