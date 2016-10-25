@@ -138,7 +138,7 @@ class BrandListView(BaseApiView):
             .where(Advertisement.__table__.c.price > 0)
             .group_by(self.table.c.id)
             .having(adv_count > 0)
-            .order_by(self.table.c.id)
+            .order_by(self.table.c.name)
         )
 
         data = []
@@ -163,7 +163,7 @@ class ModelListView(BaseApiView):
             .where(Advertisement.__table__.c.price > 0)
             .group_by(self.table.c.id)
             .having(adv_count > 0)
-            .order_by(self.table.c.id)
+            .order_by(self.table.c.name)
         )
 
         data = []

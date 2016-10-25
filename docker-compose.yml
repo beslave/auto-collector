@@ -17,11 +17,22 @@ services:
             dockerfile: Dockerfile.frontend
         ports:
             - "8081:80"
-    server:
+    app:
         build:
             context: .
-            dockerfile: Dockerfile.server
+            dockerfile: Dockerfile.app
+    server:
+        extends: app
         depends_on:
+            - app
             - db
         ports:
             - "8080:80"
+        command: python manage.py serve
+    parser:
+        extends:
+            service:
+                app
+        depends_on:
+            - app
+        command: python manage.py parse
