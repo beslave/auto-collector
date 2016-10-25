@@ -8,4 +8,4 @@ RUN npm install
 RUN gulp build
 RUN npm install http-server
 
-CMD node node_modules/http-server/bin/http-server static -p 80
+CMD node node_modules/http-server/bin/http-server static -p 80 --cors

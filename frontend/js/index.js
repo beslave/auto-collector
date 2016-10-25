@@ -12,10 +12,13 @@ app.controller('ItemsListController', controllers.ItemsListController);
 app.controller('ItemsListFiltersController', controllers.ItemsListFiltersController);
 app.controller('ModelController', controllers.ModelController);
 
-app.config(function ($routeProvider, $locationProvider) {
-    $routeProvider
-    .when('/:modelId/', {
-        templateUrl: '/static/templates/model.html',
+app.config(function ($routeProvider, $locationProvider, $sceDelegateProvider) {
+    $sceDelegateProvider.resourceUrlWhitelist([
+        'self',
+        window.settings.templatesURL + '**'
+    ]);
+    $routeProvider.when('/:modelId/', {
+        templateUrl: window.settings.templatesURL + 'model.html',
         controller: 'ModelController'
     });
 

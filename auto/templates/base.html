@@ -7,6 +7,12 @@
         <link rel="stylesheet" type="text/css" href="{{ static('main.css') }}">
         <link rel="shortcut icon" href="{{ static('images/favicon.png') }}" type="image/png">
         <base href="/">
+
+        <script>
+            window.settings = {
+                templatesURL: '{{ static("templates") }}/'
+            };
+        </script>
     </head>
     <body class="ng-cloak">
         {% block content %}{% endblock %}

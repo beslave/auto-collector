@@ -42,7 +42,9 @@ class IndexView(web.View):
     template_name = 'index.html'
 
     async def get(self):
-        return render_template(self.template_name, self.request, {})
+        response = render_template(self.template_name, self.request, {})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
 
 class AutoDataView(BaseApiView):

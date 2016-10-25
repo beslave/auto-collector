@@ -10,6 +10,7 @@ __pycache__/
 
 /env
 settings_local.py
+/.volumes
 
 /logs/*
 /frontend/static/*

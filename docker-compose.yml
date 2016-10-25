@@ -8,6 +8,9 @@ services:
             - POSTGRES_USER=auto_collector
             - POSTGRES_PASSWORD=auto_collector
             - POSTGRES_DB=auto_collector
+            - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+            - .volumes/postgresql:/var/lib/postgresql/data/pgdata:rw
     frontend:
         build:
             context: .

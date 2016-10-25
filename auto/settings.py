@@ -30,7 +30,7 @@ SITE_ADDR = '0.0.0.0'
 SITE_PORT = os.environ.get('PORT', 80)
 
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'auto', 'templates')
-STATIC_URL = '//127.0.0.1:8081/'
+STATIC_URL = 'http://127.0.0.1:8081/'
 
 SHORTENER_API_URL = 'https://www.googleapis.com/urlshortener/v1/url'
 SHORTENER_API_KEY = ''
