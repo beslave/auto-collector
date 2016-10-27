@@ -14,6 +14,7 @@ from auto.models import (
 from auto.updaters import SynchronizerUpdater
 from auto.utils import make_db_query
 
+
 logger = logging.getLogger('auto.synchronizer')
 
 advertisement_table = Advertisement.__table__
@@ -122,3 +123,7 @@ class Synchronizer:
                     .values(real_instance=pk)
                     .where(origin_table.c.id == row.id)
                 )
+
+
+synchronizer = Synchronizer()
+tasks = [synchronizer.run]

@@ -1,16 +1,18 @@
 import asyncio
-import json
 import logging
 
-from functools import wraps
-from psycopg2 import IntegrityError
-
 from auto import settings
-from auto.parsers import get_parsers
-from auto.synchronizer import Synchronizer
+from auto.parser.ria import RiaNewParser, RiaUsedParser
 
 
-logger = logging.getLogger('auto.tasks')
+logger = logging.getLogger('auto.parser')
+
+
+def get_parsers(*args, **kwargs):
+    return map(lambda Parser: Parser(*args, **kwargs), [
+        RiaNewParser,
+        RiaUsedParser,
+    ])
 
 
 def get_parser_task(parser):
@@ -26,8 +28,7 @@ def get_parser_task(parser):
     return parser_task
 
 
-synchronizer = Synchronizer()
-
-tasks = []
-tasks += [get_parser_task(parser) for parser in get_parsers()]
-tasks += [synchronizer.run]
+tasks = [
+	get_parser_task(parser)
+	for parser in get_parsers()
+]
