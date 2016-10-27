@@ -49,7 +49,7 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
         return true;
     };
 
-    var updateItems = utils.debounce(function () {
+    var updateItems = function () {
         var grouped_items = {};
         advertisements.forEach(function (adv) {
             if (!isSatisfyFilters(adv)) {
@@ -99,7 +99,7 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
 
         loadExtraItems();
         $scope.$applyAsync();
-    }, 500);
+    };
 
     var loadExtraItems = utils.debounce(function () {
         if ($scope.showItemsCount >= $scope.filteredItems.length) {

@@ -28,8 +28,6 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-print(args)
-
 
 def prepare_tasks_list(tasks):
     if not isinstance(tasks, list):
