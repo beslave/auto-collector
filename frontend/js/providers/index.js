@@ -1,23 +1,24 @@
 exports.autoData = function () {
     var data = {
         brands: [],
+        brandsPrimaryIndex: {},
         models: [],
+        modelsPrimaryIndex: {},
         filters: [],
 
         getBrand: function (brandId) {
-            if (this.brands) {
-                return this.brands.filter(function (brand) {
-                    return brand.id === brandId;
-                })[0];
-            }
+            return this.brandsPrimaryIndex[brandId];
         },
         getModel: function (modelId) {
-            if (this.models) {
-                return this.models.filter(function (model) {
-                    return model.id === modelId;
-                })[0];
-            }
+            return this.modelsPrimaryIndex[modelId];
         }
+    };
+
+    var syncPrimaryIndex = function (data, dataIndex, primaryKey) {
+        data.forEach(function (item) {
+            var pk = item[primaryKey];
+            dataIndex[pk] = item;
+        });
     };
 
     this.$get = function ($rootScope, $resource) {
@@ -28,8 +29,10 @@ exports.autoData = function () {
                 data.models.forEach(function (model) {
                     model.brand = data.getBrand(model.brand_id);
                 });
+                syncPrimaryIndex(data.models, data.modelsPrimaryIndex, 'id');
                 $rootScope.$broadcast('autoDataChanged', data);
             });
+            syncPrimaryIndex(data.brands, data.brandsPrimaryIndex, 'id');
         });
         return data;
     };
