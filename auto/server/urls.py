@@ -23,12 +23,13 @@ class Url:
 
 url_patterns = [
     Url(r'/', 'IndexView'),
-    Url(r'/{pk:\d+}/', 'ModelView'),
+    Url(r'/{pk:\d+}/', 'IndexView'),
 
     Url(r'/advertisement/{pk:\d+}/go/', 'RedirectToOriginView'),
     Url(r'/advertisement/{pk:\d+}/preview/', 'AdvertisementPreviewView'),
 
-    Url(r'/api', 'AutoDataView'),
-    Url(r'/api/brands', 'BrandListView'),
-    Url(r'/api/models', 'ModelListView'),
+    Url(r'/api/', 'AutoDataView'),
+    Url(r'/api/brands/', 'BrandListView'),
+    Url(r'/api/models/', 'ModelListView'),
+    Url(r'/api/models/{pk:\d+}/', 'ModelView'),
 ]

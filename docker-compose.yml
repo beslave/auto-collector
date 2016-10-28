@@ -28,14 +28,14 @@ services:
             - db
         ports:
             - "8080:80"
-        command: python manage.py serve
+        command: ./deploy/entry_scripts/wait-for-it.sh db:5432 -t 0 -- python manage.py serve
     parser:
         extends:
             service:
                 app
-        command: python manage.py parse
+        command: ./deploy/entry_scripts/wait-for-it.sh db:5432 -t 0 -- python manage.py parse
     synchronizer:
         extends:
             service:
                 app
-        command: python manage.py synchronize
+        command: ./deploy/entry_scripts/wait-for-it.sh db:5432 -t 0 -- python manage.py synchronize

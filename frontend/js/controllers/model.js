@@ -2,16 +2,13 @@
 
 var TABLE_ORDERING_STORE_KEY = 'advertisements-table-ordering';
 
-module.exports = function ($scope, $filter, $http, $location, store, autoData) {
+module.exports = function ($scope, $filter, $location, $routeParams, store, autoData, resourceModels) {
     angular.element(document.body).addClass('modal-open');
     $scope.advertisements = [];
     $scope.filteredAdvertisements = [];
 
-    $http.get($location.absUrl()).then(function(response) {
-        var data = response.data;
-        $scope.brand = data.brand;
-        $scope.model = data.model;
-        $scope.advertisements = data.advertisements;
+    $scope.model = resourceModels.Model.get({modelId: $routeParams.modelId}, function (model) {
+        $scope.advertisements = model.advertisements;
         updateFilters();
     });
 

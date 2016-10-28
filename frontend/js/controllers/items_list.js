@@ -123,7 +123,7 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
         updateItems();
     }
     $scope.$on('autoDataChanged', resetItems);
-    $http.get('/api').then(function (response) {
+    $http.get('/api/').then(function (response) {
         var fields = response.data.fields;
         advertisements = response.data.rows.map(function (row) {
             var adv = {};

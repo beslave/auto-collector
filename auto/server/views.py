@@ -27,14 +27,8 @@ def render_template(template_name, request, context):
 
 
 class BaseApiView(web.View):
-    template_name = 'index.html'
-
     async def get(self):
-        if self.template_name and not self.request.is_ajax:
-            return render_template(self.template_name, self.request, {})
-
         data = await self.get_json()
-
         return web.json_response(data, dumps=smart_json_dumps)
 
 
@@ -49,7 +43,6 @@ class IndexView(web.View):
 
 class AutoDataView(BaseApiView):
     table = Advertisement.__table__
-    template_name = None
 
     PER_PAGE = 50
 
@@ -118,11 +111,14 @@ class ModelView(BaseApiView):
                 'preview': row.preview
             })
 
-        return {
-            'brand': dict(brand),
-            'model': dict(model),
-            'advertisements': advertisements,
-        }
+        data = dict(model)
+        data['full_title'] = '{brand} {model}'.format(
+            brand=brand.name,
+            model=model.name,
+        )
+        data['advertisements'] = advertisements
+
+        return data
 
 
 class BrandListView(BaseApiView):
