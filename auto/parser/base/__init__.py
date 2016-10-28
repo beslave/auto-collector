@@ -14,7 +14,7 @@ from auto.updaters import (
 )
 
 
-logger = logging.getLogger('auto.parsers.base')
+logger = logging.getLogger('auto.parser')
 
 
 class OriginBrandUpdater(UpdateNotSimilarMixin, OriginUpdater):

@@ -1,6 +1,6 @@
 from aiohttp import web
 
-from auto import views
+from auto.server import views
 
 
 class Url:

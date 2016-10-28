@@ -6,11 +6,11 @@ from concurrent.futures import ProcessPoolExecutor
 from urllib.parse import urlencode
 
 from auto import settings
-from auto.parsers.base import BaseParser
+from auto.parser.base import BaseParser
 from auto.utils import get_absolute_url, get_first_for_keys, parse_int
 
 
-logger = logging.getLogger('auto.parsers.ria')
+logger = logging.getLogger('auto.parser.ria')
 executor = ProcessPoolExecutor()
 loop = asyncio.get_event_loop()
 

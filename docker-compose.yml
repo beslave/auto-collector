@@ -33,6 +33,9 @@ services:
         extends:
             service:
                 app
-        depends_on:
-            - app
         command: python manage.py parse
+    synchronizer:
+        extends:
+            service:
+                app
+        command: python manage.py synchronize
