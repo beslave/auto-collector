@@ -14,9 +14,6 @@ from auto.updaters import (
 )
 
 
-logger = logging.getLogger('auto.parser')
-
-
 class OriginBrandUpdater(UpdateNotSimilarMixin, OriginUpdater):
     table = OriginBrand.__table__
     condition_fields = ['name']
@@ -44,11 +41,11 @@ class BaseParser(object):
             cls.__instance__ = super().__new__(cls, *args, **kwargs)
         return cls.__instance__
 
-    async def get_attempts(self, client, url, getter='json'):
+    async def get_attempts(self, url, getter='json'):
         retries = 1
         while True:
             try:
-                async with client.get(url) as response:
+                async with self.client.get(url) as response:
                     assert response.status < 400
                     return await getattr(response, getter)()
 
@@ -58,7 +55,6 @@ class BaseParser(object):
 
                 await asyncio.sleep(1)
                 retries += 1
-                logger.wargning(e)
 
     async def init_updaters(self):
         if getattr(self, 'is_initialized', False):
@@ -73,15 +69,16 @@ class BaseParser(object):
         await self.init_updaters()
 
         with aiohttp.ClientSession() as client:
-            await self.parse_brands(client)
-            await self.parse_models(client)
-            await self.parse_advertisements(client)
+            self.client = client
+            await self.parse_brands()
+            await self.parse_models()
+            await self.parse_advertisements()
 
-    async def parse_brands(self, client):
+    async def parse_brands(self):
         raise NotImplemented
 
-    async def parse_models(self, client):
+    async def parse_models(self):
         raise NotImplemented
 
-    async def parse_advertisements(self, client):
+    async def parse_advertisements(self):
         raise NotImplemented

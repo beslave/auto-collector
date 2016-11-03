@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import psycopg2
 
 from auto import settings
 from auto.connection import ConnectionManager
@@ -85,26 +86,33 @@ class Synchronizer:
         if getattr(self, 'is_updaters_initialized', False):
             return
 
-        self.is_updaters_initialized = True
         self.brands_updater = await BrandsUpdater.new()
         self.models_updater = await ModelsUpdater.new()
         self.advertisements_updater = await AdvertisementsUpdater.new()
+        self.is_updaters_initialized = True
+
 
     async def run(self):
-        await self.init_updaters()
-
         while True:
-            async with ConnectionManager() as connection:
-                logger.debug('Synchronize brands')
-                await self.sync(connection, origin_brand_table, self.brands_updater)
-
-                logger.debug('Synchronize models')
-                await self.sync(connection, origin_model_table, self.models_updater)
-
-                logger.debug('Synchronize advertisements')
-                await self.sync(connection, origin_advertisement_table, self.advertisements_updater)
+            try:
+                await self.teak()
+            except Exception as e:
+                logger.exception(e)
 
             await asyncio.sleep(settings.SYNC_TIMEOUT)
+
+    async def teak(self):
+        await self.init_updaters()
+
+        async with ConnectionManager() as connection:
+            logger.debug('Synchronize brands')
+            await self.sync(connection, origin_brand_table, self.brands_updater)
+
+            logger.debug('Synchronize models')
+            await self.sync(connection, origin_model_table, self.models_updater)
+
+            logger.debug('Synchronize advertisements')
+            await self.sync(connection, origin_advertisement_table, self.advertisements_updater)
 
     async def sync(self, connection, origin_table, updater):
         rows = await connection.execute(origin_table.select())
