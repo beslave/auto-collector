@@ -7,8 +7,6 @@ from auto.models.model import Model
 class BaseComplectation:
     id = sa.Column(sa.Integer, autoincrement=True)
     name = sa.Column(sa.String, nullable=True)
-    created_at = sa.Column(sa.DateTime(timezone=False))
-    updated_at = sa.Column(sa.DateTime(timezone=False))
 
 
 class Complectation(BaseComplectation, Base):
