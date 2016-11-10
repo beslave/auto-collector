@@ -1,13 +1,16 @@
 FROM node:6
 
-ADD ./frontend /home/httpd/frontend
+ADD ./frontend/package.json /home/httpd/frontend/package.json
 WORKDIR /home/httpd/frontend
 
 RUN npm install -g gulp
-RUN npm install
 RUN npm rebuild node-sass
+RUN npm install http-server@0.9.0
+RUN npm install
+
+ADD ./frontend /home/httpd/frontend
+WORKDIR /home/httpd/frontend
 
 RUN gulp build
-RUN npm install http-server
 
 CMD node node_modules/http-server/bin/http-server static -p 80 --cors
