@@ -19,6 +19,7 @@ services:
         build:
             context: .
             dockerfile: Dockerfile.app
+        command: /bin/bash ./deploy/entry_scripts/wait-for-it.sh db:5432 -t 0 -- alembic upgrade head
     server:
         extends: app
         depends_on:
@@ -26,14 +27,14 @@ services:
             - db
         ports:
             - "8080:80"
-        command: ./deploy/entry_scripts/wait-for-it.sh db:5432 -t 0 -- python manage.py serve
+        command: python manage.py serve
     parser:
         extends:
             service:
                 app
-        command: ./deploy/entry_scripts/wait-for-it.sh db:5432 -t 0 -- python manage.py parse
+        command: python manage.py parse
     synchronizer:
         extends:
             service:
                 app
-        command: ./deploy/entry_scripts/wait-for-it.sh db:5432 -t 0 -- python manage.py synchronize
+        command: python manage.py synchronize

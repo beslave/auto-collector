@@ -75,10 +75,15 @@ class BaseRiaParser(BaseParser):
                     'origin': self.ORIGIN,
                 })
 
-                await self.adv_updater.update(adv_data)
+                advertisement = await self.adv_updater.update(adv_data)
+                if advertisement:
+                    await self.parse_advertisement_extra_data(advertisement)
 
     async def get_advertisement_list_data(self, api_data):
         raise NotImplemented
 
     async def get_advertisement_data(self, list_item_data):
         raise NotImplemented
+
+    async def parse_advertisement_extra_data(self, advertisement):
+        pass

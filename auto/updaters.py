@@ -16,8 +16,9 @@ logger = logging.getLogger('auto.updater')
 class Updater:
     pk_field = 'id'
     condition_fields = []
+    comparable_fields = []
     shorten_url_fields = []
-    cache_fieldsets = ['condition_fields']
+    cache_fieldsets = ['condition_fields', 'comparable_fields']
     table = None
 
     @classmethod
@@ -71,8 +72,19 @@ class Updater:
         cache = self.get_cache_data(pk)
         return {x: cache[x] for x in self.condition_fields}
 
+    def get_pk_for_data(self, data):
+        for pk in self.cache:
+            cache = self.get_cache_data(pk)
+            if all(cache[field] == data[field] for field in self.comparable_fields):
+                return pk
+
     async def preprocess_data(self, data):
         processed = {}
+
+        if self.comparable_fields and self.pk_field not in data:
+            pk = self.get_pk_for_data(data)
+            processed[self.pk_field] = pk
+
         for field, value in data.items():
             if field in self.shorten_url_fields:
                 value = await shorten_url(value)
@@ -118,13 +130,13 @@ class Updater:
 
         query = self.table.insert().values(**data)
 
-        async def get_insert_id(rows):
+        async def get_inserted_pk(rows):
             async for row in rows:
                 return getattr(row, self.pk_field)
 
         try:
             if not pk:
-                pk = await make_db_query(query, processor=get_insert_id)
+                pk = await make_db_query(query, processor=get_inserted_pk)
             else:
                 await make_db_query(query)
 
@@ -154,26 +166,7 @@ class Updater:
         self.not_updated = set(self.cache.keys())
 
 
-class UpdaterWithDates(Updater):
-    created_at_field = 'created_at'
-    updated_at_field = 'updated_at'
-
-    def get_cache_fields(self):
-        fields = super().get_cache_fields()
-        fields = set(fields + [self.created_at_field, self.updated_at_field])
-        return list(fields)
-
-    async def create(self, data):
-        data[self.created_at_field] = datetime.now()
-        return await super().create(data)
-
-    async def preprocess_data(self, data):
-        data = await super().preprocess_data(data)
-        data[self.updated_at_field] = datetime.now()
-        return data
-
-
-class OriginUpdater(UpdaterWithDates):
+class OriginUpdater(Updater):
     origin_field = 'origin'
     origin = None
 
@@ -195,28 +188,38 @@ class OriginUpdater(UpdaterWithDates):
         return data
 
 
-class SynchronizerUpdater(UpdaterWithDates):
+class SynchronizerUpdater(Updater):
     comparable_fields = ['name']
     sync_fields = []
-    cache_fieldsets = ['condition_fields', 'comparable_fields']
 
     def get_update_probability(self, data, **kwargs):
         return 0
 
-    def get_pk_for_data(self, data):
-        for pk in self.cache:
-            cache = self.get_cache_data(pk)
-            if all(cache[field] == data[field] for field in self.comparable_fields):
-                return pk
-
     async def preprocess_data(self, data):
-        pk = data.get(self.pk_field) or self.get_pk_for_data(data)
         data = {
             field: data.get(field)
-            for field in self.sync_fields
+            for field in set(self.sync_fields + self.comparable_fields)
         }
-        data[self.pk_field] = pk
         return await super().preprocess_data(data)
+
+
+class UpdaterWithDatesMixin:
+    created_at_field = 'created_at'
+    updated_at_field = 'updated_at'
+
+    def get_cache_fields(self):
+        fields = super().get_cache_fields()
+        fields = set(fields + [self.created_at_field, self.updated_at_field])
+        return list(fields)
+
+    async def create(self, data):
+        data[self.created_at_field] = datetime.now()
+        return await super().create(data)
+
+    async def preprocess_data(self, data):
+        data = await super().preprocess_data(data)
+        data[self.updated_at_field] = datetime.now()
+        return data
 
 
 class UpdateNotSimilarMixin:
@@ -233,7 +236,7 @@ class UpdateByCreatedAtMixin:
 
     def __init__(self, *args, **kwargs):
         if self.created_at_field not in self.condition_fields:
-            self.condition_fields.append(self.created_at_field)
+            self.condition_fields = list(self.condition_fields) + [self.created_at_field]
 
         return super().__init__(*args, **kwargs)
 

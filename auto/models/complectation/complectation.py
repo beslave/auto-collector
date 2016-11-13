@@ -6,7 +6,7 @@ from auto.models.model import Model
 
 class BaseComplectation:
     id = sa.Column(sa.Integer, autoincrement=True)
-    name = sa.Column(sa.String, nullable=True)
+    name = sa.Column(sa.String, nullable=False)
 
 
 class Complectation(BaseComplectation, Base):

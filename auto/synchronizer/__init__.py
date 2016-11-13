@@ -5,12 +5,10 @@ import psycopg2
 from auto import settings
 from auto.connection import ConnectionManager
 from auto.models import (
-    Advertisement,
-    Brand,
-    Model,
-    OriginAdvertisement,
-    OriginBrand,
-    OriginModel,
+    Brand, OriginBrand,
+    Model, OriginModel,
+    Advertisement, OriginAdvertisement,
+    Complectation, OriginComplectation,
 )
 from auto.updaters import SynchronizerUpdater
 from auto.utils import make_db_query
@@ -21,9 +19,11 @@ logger = logging.getLogger('auto.synchronizer')
 advertisement_table = Advertisement.__table__
 brand_table = Brand.__table__
 model_table = Model.__table__
+complectation_table = Complectation.__table__
 origin_advertisement_table = OriginAdvertisement.__table__
 origin_brand_table = OriginBrand.__table__
 origin_model_table = OriginModel.__table__
+origin_complectation_table = OriginComplectation.__table__
 
 
 async def get_first_row(rows):
@@ -31,12 +31,12 @@ async def get_first_row(rows):
         return row
 
 
-class BrandsUpdater(SynchronizerUpdater):
+class BrandUpdater(SynchronizerUpdater):
     table = brand_table
     sync_fields = ['name']
 
 
-class ModelsUpdater(SynchronizerUpdater):
+class ModelUpdater(SynchronizerUpdater):
     table = model_table
     comparable_fields = ['name', 'brand_id']
     sync_fields = ['name', 'brand_id']
@@ -50,7 +50,7 @@ class ModelsUpdater(SynchronizerUpdater):
         return await super().preprocess_data(data)
 
 
-class AdvertisementsUpdater(SynchronizerUpdater):
+class AdvertisementUpdater(SynchronizerUpdater):
     table = advertisement_table
     sync_fields = [
         'name',
@@ -70,9 +70,20 @@ class AdvertisementsUpdater(SynchronizerUpdater):
         data['model_id'] = model.real_instance
         return await super().preprocess_data(data)
 
-    async def create(self, data):
-        object_data = await super().create(data)
-        return object_data
+
+class ComplectationUpdater(SynchronizerUpdater):
+    table = complectation_table
+    sync_fields = [
+        'name',
+        'model_id',
+    ]
+    comparable_fields = ['name', 'model_id']
+
+    async def preprocess_data(self, data):
+        query = origin_model_table.select().where(origin_model_table.c.id == data['model_id'])
+        model = await make_db_query(query, get_first_row)
+        data['model_id'] = model.real_instance
+        return await super().preprocess_data(data)
 
 
 class Synchronizer:
@@ -86,9 +97,10 @@ class Synchronizer:
         if getattr(self, 'is_updaters_initialized', False):
             return
 
-        self.brands_updater = await BrandsUpdater.new()
-        self.models_updater = await ModelsUpdater.new()
-        self.advertisements_updater = await AdvertisementsUpdater.new()
+        self.brand_updater = await BrandUpdater.new()
+        self.model_updater = await ModelUpdater.new()
+        self.advertisement_updater = await AdvertisementUpdater.new()
+        self.complectation_updater = await ComplectationUpdater.new()
         self.is_updaters_initialized = True
 
 
@@ -106,13 +118,16 @@ class Synchronizer:
 
         async with ConnectionManager() as connection:
             logger.debug('Synchronize brands')
-            await self.sync(connection, origin_brand_table, self.brands_updater)
+            await self.sync(connection, origin_brand_table, self.brand_updater)
 
             logger.debug('Synchronize models')
-            await self.sync(connection, origin_model_table, self.models_updater)
+            await self.sync(connection, origin_model_table, self.model_updater)
 
             logger.debug('Synchronize advertisements')
-            await self.sync(connection, origin_advertisement_table, self.advertisements_updater)
+            await self.sync(connection, origin_advertisement_table, self.advertisement_updater)
+
+            logger.debug('Synchronize complectations')
+            await self.sync(connection, origin_complectation_table, self.complectation_updater)
 
     async def sync(self, connection, origin_table, updater):
         rows = await connection.execute(origin_table.select())

@@ -30,6 +30,6 @@ class ConnectionManager:
         try:
             await self.engine.release(self.connection)
         except AssertionError as e:
-            logger.exception(e)
+            pass
 
         self.connection = None
