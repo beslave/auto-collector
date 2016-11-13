@@ -57,8 +57,8 @@ class RiaNewParser(BaseRiaParser):
             # 'complectation_id': name_element.attrs.get('complete_id'),
         }
 
-    async def parse_advertisement_extra_data(self, advertisement):
-        api_url = self.ADVERTISEMENT_API_URL.format(advertisement['id'])
+    async def parse_complectation(self, advertisement_id):
+        api_url = self.ADVERTISEMENT_API_URL.format(advertisement_id)
         api_data = await self.get_attempts(api_url)
         options = api_data.get('options', {})
         
@@ -70,11 +70,10 @@ class RiaNewParser(BaseRiaParser):
                     option_value = option['val']
                     parsed_options[option_id] = option_value
 
-        if not has_keys(api_data, 'complete', 'complete_id', 'model_id'):
+        if not has_keys(api_data, 'complete', 'model_id'):
             return
 
         complectation = await self.complectation_updater.update({
-            'id': api_data['complete_id'],
             'name': api_data['complete'],
             'model_id': api_data['model_id'],
         })
@@ -203,3 +202,5 @@ class RiaNewParser(BaseRiaParser):
             'max_velocity': api_data.get('speed'),
             'acceleration_time_to_100': parse_float_to_int(api_data.get('acceleration'), 1000),
         })
+
+        return complectation

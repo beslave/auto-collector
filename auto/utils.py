@@ -42,6 +42,7 @@ def parse_interval_depended(value):
 
     return value, start, end
 
+
 def parse_float_to_int(value, multiplier):
     if not value:
         return value
@@ -51,6 +52,7 @@ def parse_float_to_int(value, multiplier):
     value = re.subn(r'[^.\d]+', '', value)[0]
     value = float(value)
     return int(value * multiplier)
+
 
 def parse_roman(value):
     value = str(value).strip()
@@ -111,3 +113,8 @@ async def make_db_query(query, processor=None):
             return await processor(results)
 
         return results
+
+
+async def get_first_row(rows):
+    async for row in rows:
+        return row

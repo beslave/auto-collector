@@ -5,21 +5,24 @@ import psycopg2
 from auto import settings
 from auto.connection import ConnectionManager
 from auto.models import (
+    Body, OriginBody,
+    BodyType, OriginBodyType,
     Brand, OriginBrand,
     Model, OriginModel,
     Advertisement, OriginAdvertisement,
     Complectation, OriginComplectation,
 )
 from auto.updaters import SynchronizerUpdater
-from auto.utils import make_db_query
+from auto.utils import get_first_row, make_db_query
 
 
 logger = logging.getLogger('auto.synchronizer')
 
 
-async def get_first_row(rows):
-    async for row in rows:
-        return row
+class BodyTypeUpdater(SynchronizerUpdater):
+    table = BodyType.__table__
+    origin_table = OriginBodyType.__table__
+    sync_fields = ['name']
 
 
 class BrandUpdater(SynchronizerUpdater):
@@ -35,33 +38,7 @@ class ModelUpdater(SynchronizerUpdater):
     sync_fields = ['name', 'brand_id']
 
     async def preprocess_data(self, data):
-        query = OriginBrand.__table__.select().where(
-            OriginBrand.__table__.c.id == data['brand_id']
-        )
-        brand = await make_db_query(query, get_first_row)
-        data['brand_id'] = brand.real_instance
-        return await super().preprocess_data(data)
-
-
-class AdvertisementUpdater(SynchronizerUpdater):
-    table = Advertisement.__table__
-    origin_table = OriginAdvertisement.__table__
-    sync_fields = [
-        'name',
-        'model_id',
-        'is_new',
-        'year',
-        'price',
-        'origin_url',
-        'preview',
-    ]
-    shorten_url_fields = ['origin_url', 'preview']
-    comparable_fields = ['id']
-
-    async def preprocess_data(self, data):
-        query = OriginModel.__table__.select().where(OriginModel.__table__.c.id == data['model_id'])
-        model = await make_db_query(query, get_first_row)
-        data['model_id'] = model.real_instance
+        data['brand_id'] = await self.get_real_instance(OriginBrand, data['origin'], data['brand_id'])
         return await super().preprocess_data(data)
 
 
@@ -75,18 +52,57 @@ class ComplectationUpdater(SynchronizerUpdater):
     comparable_fields = ['name', 'model_id']
 
     async def preprocess_data(self, data):
-        query = OriginModel.__table__.select().where(OriginModel.__table__.c.id == data['model_id'])
-        model = await make_db_query(query, get_first_row)
-        data['model_id'] = model.real_instance
+        data['model_id'] = await self.get_real_instance(OriginModel, data['origin'], data['model_id'])
+        return await super().preprocess_data(data)
+
+
+class BodyUpdater(SynchronizerUpdater):
+    table = Body.__table__
+    origin_table = OriginBody.__table__
+    sync_fields = [
+        'complectation_id',
+        'body_type_id',
+        'doors',
+        'seats',
+    ]
+    comparable_fields = ['complectation_id']
+
+    async def preprocess_data(self, data):
+        data['complectation_id'] = await self.get_real_instance(OriginComplectation, data['origin'], data['complectation_id'])
+        data['body_type_id'] = await self.get_real_instance(OriginComplectation, data['origin'], data['body_type_id'])
+        return await super().preprocess_data(data)
+
+
+class AdvertisementUpdater(SynchronizerUpdater):
+    table = Advertisement.__table__
+    origin_table = OriginAdvertisement.__table__
+    sync_fields = [
+        'name',
+        'model_id',
+        'complectation_id',
+        'is_new',
+        'year',
+        'price',
+        'origin_url',
+        'preview',
+    ]
+    shorten_url_fields = ['origin_url', 'preview']
+    comparable_fields = []
+
+    async def preprocess_data(self, data):
+        data['model_id'] = await self.get_real_instance(OriginModel, data['origin'], data['model_id'])
+        data['complectation_id'] = await self.get_real_instance(OriginComplectation, data['origin'], data['complectation_id'])
         return await super().preprocess_data(data)
 
 
 class Synchronizer:
     updaters_list = [
+        BodyTypeUpdater,
         BrandUpdater,
         ModelUpdater,
-        AdvertisementUpdater,
         ComplectationUpdater,
+        BodyUpdater,
+        AdvertisementUpdater,
     ]
 
     def __new__(cls, *args, **kwargs):

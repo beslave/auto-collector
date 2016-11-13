@@ -71,13 +71,14 @@ class BaseRiaParser(BaseParser):
                     logger.exception(e)
                     continue
 
+                complectation = await self.parse_complectation(adv_data['id'])
+
                 adv_data.update({
                     'origin': self.ORIGIN,
+                    'complectation_id': complectation and complectation['id'],
                 })
 
                 advertisement = await self.adv_updater.update(adv_data)
-                if advertisement:
-                    await self.parse_advertisement_extra_data(advertisement)
 
     async def get_advertisement_list_data(self, api_data):
         raise NotImplemented
@@ -85,5 +86,5 @@ class BaseRiaParser(BaseParser):
     async def get_advertisement_data(self, list_item_data):
         raise NotImplemented
 
-    async def parse_advertisement_extra_data(self, advertisement):
+    async def parse_complectation(self, advertisement_id):
         pass

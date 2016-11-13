@@ -7,7 +7,7 @@ from random import random
 from sqlalchemy.sql import select
 
 from auto import settings
-from auto.utils import make_db_query, shorten_url
+from auto.utils import get_first_row, make_db_query, shorten_url
 
 
 logger = logging.getLogger('auto.updater')
@@ -123,9 +123,7 @@ class Updater:
         return data
 
     async def create(self, data):
-        pk = data[self.pk_field]
-
-        if not pk:
+        if not data.get(self.pk_field, True):
             del data[self.pk_field]
 
         query = self.table.insert().values(**data)
@@ -135,10 +133,7 @@ class Updater:
                 return getattr(row, self.pk_field)
 
         try:
-            if not pk:
-                pk = await make_db_query(query, processor=get_inserted_pk)
-            else:
-                await make_db_query(query)
+            pk = await make_db_query(query, processor=get_inserted_pk)
 
             data[self.pk_field] = pk
             self.cache[pk] = [data.get(x) for x in self.cache_fields]
@@ -197,12 +192,29 @@ class SynchronizerUpdater(Updater):
     def get_update_probability(self, data, **kwargs):
         return 0
 
+    async def get_real_instance(self, model, origin, pk):
+        if not pk:
+            return
+
+        table = model.__table__
+        query = table.select().where(table.c.id == pk).where(table.c.origin == origin)
+        instance = await make_db_query(query, get_first_row)
+        return instance and instance.real_instance
+
+    async def preprocess_data(self, data):
+        if 'origin' in data:
+            del data['origin']
+
+        return await super().preprocess_data(data)
+
     async def sync(self):
         logger.debug('Synchronize {}'.format(self.table.name))
 
         real_instance_table = self.real_instance_table or self.origin_table
         fields = set(self.sync_fields + self.comparable_fields)
         fields.add(self.pk_field)
+        fields.add('origin')
+
         query_fields = [getattr(self.origin_table.c, field) for field in fields]
         query_fields.append(real_instance_table.c.real_instance)
 
@@ -211,9 +223,15 @@ class SynchronizerUpdater(Updater):
 
         async for row in rows:
             data = dict(row)
+            origin = data['origin']
             prev_real_instance = data['real_instance']
-            data[self.pk_field] = data['real_instance']
             del data['real_instance']
+            del data[self.pk_field]
+
+            if prev_real_instance:
+                data[self.pk_field] = prev_real_instance
+
+
             object_data = await self.update(data)
 
             if not object_data:
@@ -228,6 +246,7 @@ class SynchronizerUpdater(Updater):
                     real_instance_table.update()
                     .values(real_instance=pk)
                     .where(real_instance_pk_field == row_pk)
+                    .where(real_instance_table.c.origin == origin)
                 )
 
 
