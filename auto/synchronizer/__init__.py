@@ -16,15 +16,6 @@ from auto.utils import make_db_query
 
 logger = logging.getLogger('auto.synchronizer')
 
-advertisement_table = Advertisement.__table__
-brand_table = Brand.__table__
-model_table = Model.__table__
-complectation_table = Complectation.__table__
-origin_advertisement_table = OriginAdvertisement.__table__
-origin_brand_table = OriginBrand.__table__
-origin_model_table = OriginModel.__table__
-origin_complectation_table = OriginComplectation.__table__
-
 
 async def get_first_row(rows):
     async for row in rows:
@@ -32,18 +23,20 @@ async def get_first_row(rows):
 
 
 class BrandUpdater(SynchronizerUpdater):
-    table = brand_table
+    table = Brand.__table__
+    origin_table = OriginBrand.__table__
     sync_fields = ['name']
 
 
 class ModelUpdater(SynchronizerUpdater):
-    table = model_table
+    table = Model.__table__
+    origin_table = OriginModel.__table__
     comparable_fields = ['name', 'brand_id']
     sync_fields = ['name', 'brand_id']
 
     async def preprocess_data(self, data):
-        query = origin_brand_table.select().where(
-            origin_brand_table.c.id == data['brand_id']
+        query = OriginBrand.__table__.select().where(
+            OriginBrand.__table__.c.id == data['brand_id']
         )
         brand = await make_db_query(query, get_first_row)
         data['brand_id'] = brand.real_instance
@@ -51,7 +44,8 @@ class ModelUpdater(SynchronizerUpdater):
 
 
 class AdvertisementUpdater(SynchronizerUpdater):
-    table = advertisement_table
+    table = Advertisement.__table__
+    origin_table = OriginAdvertisement.__table__
     sync_fields = [
         'name',
         'model_id',
@@ -65,14 +59,15 @@ class AdvertisementUpdater(SynchronizerUpdater):
     comparable_fields = ['id']
 
     async def preprocess_data(self, data):
-        query = origin_model_table.select().where(origin_model_table.c.id == data['model_id'])
+        query = OriginModel.__table__.select().where(OriginModel.__table__.c.id == data['model_id'])
         model = await make_db_query(query, get_first_row)
         data['model_id'] = model.real_instance
         return await super().preprocess_data(data)
 
 
 class ComplectationUpdater(SynchronizerUpdater):
-    table = complectation_table
+    table = Complectation.__table__
+    origin_table = OriginComplectation.__table__
     sync_fields = [
         'name',
         'model_id',
@@ -80,13 +75,20 @@ class ComplectationUpdater(SynchronizerUpdater):
     comparable_fields = ['name', 'model_id']
 
     async def preprocess_data(self, data):
-        query = origin_model_table.select().where(origin_model_table.c.id == data['model_id'])
+        query = OriginModel.__table__.select().where(OriginModel.__table__.c.id == data['model_id'])
         model = await make_db_query(query, get_first_row)
         data['model_id'] = model.real_instance
         return await super().preprocess_data(data)
 
 
 class Synchronizer:
+    updaters_list = [
+        BrandUpdater,
+        ModelUpdater,
+        AdvertisementUpdater,
+        ComplectationUpdater,
+    ]
+
     def __new__(cls, *args, **kwargs):
         if not getattr(cls, '__instance__', None):
             cls.__instance__ = super().__new__(cls, *args, **kwargs)
@@ -97,10 +99,11 @@ class Synchronizer:
         if getattr(self, 'is_updaters_initialized', False):
             return
 
-        self.brand_updater = await BrandUpdater.new()
-        self.model_updater = await ModelUpdater.new()
-        self.advertisement_updater = await AdvertisementUpdater.new()
-        self.complectation_updater = await ComplectationUpdater.new()
+        self.updaters = []
+        for updater_class in self.updaters_list:
+            updater = await updater_class.new()
+            self.updaters.append(updater)
+
         self.is_updaters_initialized = True
 
 
@@ -116,36 +119,8 @@ class Synchronizer:
     async def teak(self):
         await self.init_updaters()
 
-        async with ConnectionManager() as connection:
-            logger.debug('Synchronize brands')
-            await self.sync(connection, origin_brand_table, self.brand_updater)
-
-            logger.debug('Synchronize models')
-            await self.sync(connection, origin_model_table, self.model_updater)
-
-            logger.debug('Synchronize advertisements')
-            await self.sync(connection, origin_advertisement_table, self.advertisement_updater)
-
-            logger.debug('Synchronize complectations')
-            await self.sync(connection, origin_complectation_table, self.complectation_updater)
-
-    async def sync(self, connection, origin_table, updater):
-        rows = await connection.execute(origin_table.select())
-
-        async for row in rows:
-            data = dict(row)
-            prev_real_instance = data['real_instance']
-            data['id'] = data['real_instance']
-            del data['real_instance']
-            object_data = await updater.update(data)
-            pk = object_data['id']
-
-            if prev_real_instance != pk:
-                await connection.execute(
-                    origin_table.update()
-                    .values(real_instance=pk)
-                    .where(origin_table.c.id == row.id)
-                )
+        for updater in self.updaters:
+            await updater.sync()
 
 
 synchronizer = Synchronizer()

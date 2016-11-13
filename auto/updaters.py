@@ -191,16 +191,44 @@ class OriginUpdater(Updater):
 class SynchronizerUpdater(Updater):
     comparable_fields = ['name']
     sync_fields = []
+    origin_table = None
+    real_instance_table = None  # use origin_table if not provided
 
     def get_update_probability(self, data, **kwargs):
         return 0
 
-    async def preprocess_data(self, data):
-        data = {
-            field: data.get(field)
-            for field in set(self.sync_fields + self.comparable_fields)
-        }
-        return await super().preprocess_data(data)
+    async def sync(self):
+        logger.debug('Synchronize {}'.format(self.table.name))
+
+        real_instance_table = self.real_instance_table or self.origin_table
+        fields = set(self.sync_fields + self.comparable_fields)
+        fields.add(self.pk_field)
+        query_fields = [getattr(self.origin_table.c, field) for field in fields]
+        query_fields.append(real_instance_table.c.real_instance)
+
+        query = select(query_fields).where(real_instance_table.c.id == self.origin_table.c.id)
+        rows = await make_db_query(query)
+
+        async for row in rows:
+            data = dict(row)
+            prev_real_instance = data['real_instance']
+            data[self.pk_field] = data['real_instance']
+            del data['real_instance']
+            object_data = await self.update(data)
+
+            if not object_data:
+                continue
+
+            pk = object_data[self.pk_field]
+
+            if prev_real_instance != pk:
+                real_instance_pk_field = getattr(real_instance_table.c, self.pk_field)
+                row_pk = getattr(row, self.pk_field)
+                await make_db_query(
+                    real_instance_table.update()
+                    .values(real_instance=pk)
+                    .where(real_instance_pk_field == row_pk)
+                )
 
 
 class UpdaterWithDatesMixin:

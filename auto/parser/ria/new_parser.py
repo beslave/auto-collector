@@ -70,10 +70,11 @@ class RiaNewParser(BaseRiaParser):
                     option_value = option['val']
                     parsed_options[option_id] = option_value
 
-        if not has_keys(api_data, 'complete', 'model_id'):
+        if not has_keys(api_data, 'complete', 'complete_id', 'model_id'):
             return
 
         complectation = await self.complectation_updater.update({
+            'id': api_data['complete_id'],
             'name': api_data['complete'],
             'model_id': api_data['model_id'],
         })
