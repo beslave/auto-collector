@@ -7,7 +7,7 @@ from random import random
 from sqlalchemy.sql import select
 
 from auto import settings
-from auto.utils import get_first_row, make_db_query, shorten_url
+from auto.utils import db_insert, get_first_row, make_db_query, shorten_url
 
 
 logger = logging.getLogger('auto.updater')
@@ -128,12 +128,8 @@ class Updater:
 
         query = self.table.insert().values(**data)
 
-        async def get_inserted_pk(rows):
-            async for row in rows:
-                return getattr(row, self.pk_field)
-
         try:
-            pk = await make_db_query(query, processor=get_inserted_pk)
+            pk = await db_insert(query)
 
             data[self.pk_field] = pk
             self.cache[pk] = [data.get(x) for x in self.cache_fields]

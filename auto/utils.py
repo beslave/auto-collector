@@ -115,6 +115,12 @@ async def make_db_query(query, processor=None):
         return results
 
 
+async def db_insert(query):
+    async with ConnectionManager() as connection:
+        pk = await connection.scalar(query)
+        return pk
+
+
 async def get_first_row(rows):
     async for row in rows:
         return row
