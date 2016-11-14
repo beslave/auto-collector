@@ -7,7 +7,7 @@ from random import random
 from sqlalchemy.sql import select
 
 from auto import settings
-from auto.utils import db_insert, get_first_row, make_db_query, shorten_url
+from auto.utils import db_insert, make_db_query, shorten_url
 
 
 logger = logging.getLogger('auto.updater')
@@ -194,7 +194,8 @@ class SynchronizerUpdater(Updater):
 
         table = model.__table__
         query = table.select().where(table.c.id == pk).where(table.c.origin == origin)
-        instance = await make_db_query(query, get_first_row)
+        results = await make_db_query(query)
+        instance = await results.first()
         return instance and instance.real_instance
 
     async def preprocess_data(self, data):

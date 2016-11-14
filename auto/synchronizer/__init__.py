@@ -13,7 +13,7 @@ from auto.models import (
     Complectation, OriginComplectation,
 )
 from auto.updaters import SynchronizerUpdater
-from auto.utils import get_first_row, make_db_query
+from auto.utils import make_db_query
 
 
 logger = logging.getLogger('auto.synchronizer')
