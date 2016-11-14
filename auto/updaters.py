@@ -79,6 +79,9 @@ class Updater:
                 return pk
 
     async def preprocess_data(self, data):
+        if not data:
+            return
+
         processed = {}
 
         if self.comparable_fields and self.pk_field not in data:
@@ -102,6 +105,9 @@ class Updater:
 
     async def update(self, data):
         data = await self.preprocess_data(data)
+
+        if not data:
+            return
 
         pk = data.get(self.pk_field)
         self.not_updated.discard(pk)
@@ -175,7 +181,10 @@ class OriginUpdater(Updater):
 
     async def preprocess_data(self, data):
         data = await super().preprocess_data(data)
-        data[self.origin_field] = self.origin
+
+        if data:
+            data[self.origin_field] = self.origin
+
         return data
 
 
@@ -199,7 +208,7 @@ class SynchronizerUpdater(Updater):
         return instance and instance.real_instance
 
     async def preprocess_data(self, data):
-        if 'origin' in data:
+        if data and 'origin' in data:
             del data['origin']
 
         return await super().preprocess_data(data)
@@ -207,7 +216,7 @@ class SynchronizerUpdater(Updater):
     async def sync(self):
         logger.debug('Synchronize {}'.format(self.table.name))
 
-        real_instance_table = self.real_instance_table or self.origin_table
+        real_instance_table = self.origin_table if self.real_instance_table is None else self.real_instance_table
         fields = set(self.sync_fields + self.comparable_fields)
         fields.add(self.pk_field)
         fields.add('origin')
@@ -225,9 +234,11 @@ class SynchronizerUpdater(Updater):
             del data['real_instance']
             del data[self.pk_field]
 
+            if not prev_real_instance and self.real_instance_table is not None:
+                continue
+
             if prev_real_instance:
                 data[self.pk_field] = prev_real_instance
-
 
             object_data = await self.update(data)
 
@@ -262,7 +273,8 @@ class UpdaterWithDatesMixin:
 
     async def preprocess_data(self, data):
         data = await super().preprocess_data(data)
-        data[self.updated_at_field] = datetime.now()
+        if data:
+            data[self.updated_at_field] = datetime.now()
         return data
 
 
