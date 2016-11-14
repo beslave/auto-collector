@@ -234,7 +234,7 @@ class SynchronizerUpdater(Updater):
             del data['real_instance']
             del data[self.pk_field]
 
-            if not prev_real_instance and self.real_instance_table is not None:
+            if not prev_real_instance and self.real_instance_table:
                 continue
 
             if prev_real_instance:
@@ -251,10 +251,10 @@ class SynchronizerUpdater(Updater):
                 real_instance_pk_field = getattr(real_instance_table.c, self.pk_field)
                 row_pk = getattr(row, self.pk_field)
                 await make_db_query(
-                    real_instance_table.update()
+                    self.origin_table.update()
                     .values(real_instance=pk)
-                    .where(real_instance_pk_field == row_pk)
-                    .where(real_instance_table.c.origin == origin)
+                    .where(getattr(self.origin_table.c, self.pk_field) == row_pk)
+                    .where(self.origin_table.c.origin == origin)
                 )
 
 
