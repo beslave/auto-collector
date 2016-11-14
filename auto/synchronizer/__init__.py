@@ -69,7 +69,7 @@ class BodyUpdater(SynchronizerUpdater):
 
     async def preprocess_data(self, data):
         data['complectation_id'] = await self.get_real_instance(OriginComplectation, data['origin'], data['complectation_id'])
-        data['body_type_id'] = await self.get_real_instance(OriginComplectation, data['origin'], data['body_type_id'])
+        data['body_type_id'] = await self.get_real_instance(OriginBodyType, data['origin'], data['body_type_id'])
         return await super().preprocess_data(data)
 
 
