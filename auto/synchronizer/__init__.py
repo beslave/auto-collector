@@ -2,7 +2,8 @@ import asyncio
 import logging
 import psycopg2
 
-from auto import settings
+import settings
+
 from auto.connection import ConnectionManager
 from auto.models import (
     Body, OriginBody,

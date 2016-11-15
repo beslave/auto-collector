@@ -6,7 +6,8 @@ from psycopg2 import IntegrityError
 from random import random
 from sqlalchemy.sql import select
 
-from auto import settings
+import settings
+
 from auto.utils import db_insert, make_db_query, shorten_url
 
 

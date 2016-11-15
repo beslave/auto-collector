@@ -5,7 +5,8 @@ import re
 
 from datetime import datetime
 
-from auto import settings
+import settings
+
 from auto.connection import ConnectionManager
 
 

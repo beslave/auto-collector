@@ -1,0 +1,14 @@
+FROM postgres:9
+
+RUN apt-get -yqq update && \
+    apt-get -yqq install python-pip && \
+    apt-get -yqq install libpq-dev && \
+    apt-get -yqq install python-dev
+
+ADD ./.meta/packages-db /home/db/.meta/packages-db
+RUN pip install -r /home/db/.meta/packages-db
+
+ADD ./alembic.ini /home/db/alembic.ini
+ADD ./migrations /home/db/migrations
+ADD ./settings.py /home/db/settings.py
+WORKDIR /home/db

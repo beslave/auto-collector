@@ -4,7 +4,8 @@ import argparse
 import asyncio
 import logging.config
 
-from auto import settings
+import settings
+
 from auto.parser import tasks as parse_tasks
 from auto.server import tasks as serve_tasks
 from auto.synchronizer import tasks as synchorize_tasks

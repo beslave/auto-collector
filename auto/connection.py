@@ -6,7 +6,7 @@ import aiopg.sa.engine
 import logging
 import psycopg2
 
-from auto import settings
+import settings
 
 
 logger = logging.getLogger('auto.connection')

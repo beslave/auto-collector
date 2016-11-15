@@ -1,7 +1,8 @@
 import asyncio
 import logging
 
-from auto import settings
+import settings
+
 from auto.parser.ria import RiaNewParser, RiaUsedParser
 
 

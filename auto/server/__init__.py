@@ -4,7 +4,8 @@ import jinja2
 
 from aiohttp import web
 
-from auto import settings
+import settings
+
 from auto.server.middlewares import middlewares
 from auto.server.urls import url_patterns
 

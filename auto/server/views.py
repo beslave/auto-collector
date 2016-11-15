@@ -5,7 +5,8 @@ from aiohttp import web
 from aiohttp_jinja2 import render_template as jinja2_render_template
 from functools import partial
 
-from auto import settings
+import settings
+
 from auto.connection import ConnectionManager
 from auto.models import Advertisement, Brand, Model
 
