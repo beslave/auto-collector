@@ -235,7 +235,7 @@ class SynchronizerUpdater(Updater):
             del data['real_instance']
             del data[self.pk_field]
 
-            if not prev_real_instance and self.real_instance_table:
+            if not prev_real_instance and self.real_instance_table is not None:
                 continue
 
             if prev_real_instance:
