@@ -127,11 +127,20 @@ class BaseParser(object):
 
             for model_field, field_dependency in updater.field_dependencies.items():
                 dependency_updater_name, dependency_field = field_dependency.split('.')
-                value = stored_data_per_updater[dependency_updater_name][dependency_field]
+                value = stored_data_per_updater[dependency_updater_name].get(dependency_field)
                 data[model_field] = value
 
-            try:
+            is_valid = True
+            required_fields = set(updater.comparable_fields + updater.required_fields)
+            for required_field in required_fields:
+                value = data.get(required_field)
+                if value is None or value == '':
+                    is_valid = False
+                    break
+
+            if is_valid:
                 data = await updater.update(data)
-            except Exception as e:
-                import pdb;pdb.set_trace()
+            else:
+                data = {}
+
             stored_data_per_updater[updater.name] = data

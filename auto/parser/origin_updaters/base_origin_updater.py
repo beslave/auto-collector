@@ -8,6 +8,7 @@ class OriginUpdater(Updater):
     origin = None
     api_fields = {}
     field_dependencies = {}
+    required_fields = []
 
     def __init__(self, origin=None, *args, **kwargs):
         self.origin = origin or self.origin
