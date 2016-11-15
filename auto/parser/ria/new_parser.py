@@ -30,32 +30,52 @@ class RiaNewParser(BaseRiaParser):
 
     async def get_advertisement_list_data(self, api_data):
         soup = BeautifulSoup(api_data, 'html.parser')
-        return soup.select('.ticket-item-newauto')
+        list_data = []
+
+        for item in soup.select('.ticket-item-newauto'):
+            name_element = item.select('.name a')[0]
+            photo_element = item.select('.block-photo img')[0]
+
+            advertisement_id = parse_int(name_element.attrs.get('auto_id'))
+            preview = photo_element.attrs.get('src', '').strip()
+
+            list_data.append({
+                'id': advertisement_id,
+                'name': name_element.text.strip(),
+                'url': get_absolute_url(name_element.attrs['href'], self.BASE_URL),
+                'preview': get_absolute_url(preview, RiaNewParser.BASE_URL)
+            })
+
+        return list_data
+
 
     async def get_advertisement_data(self, list_item_data):
-        name_element = list_item_data.select('.name a')[0]
-        year_element = list_item_data.select('.year')[0]
-        price_element = list_item_data.select('.block-price strong')[0]
-        photo_element = list_item_data.select('.block-photo img')[0]
+        advertisement_id = list_item_data['id']
+        api_url = self.ADVERTISEMENT_API_URL.format(advertisement_id)
+        api_data = await self.get_attempts(api_url)
 
-        origin_url = name_element.attrs['href']
-        origin_url = get_absolute_url(origin_url, RiaNewParser.BASE_URL)
-        preview = photo_element.attrs.get('src', '').strip()
-        preview = get_absolute_url(preview, RiaNewParser.BASE_URL)
+        parsed_options = {}
+        for options_type, type_options in api_data.get('parsed_options', {}).items():
+            for cat_options in type_options:
+                for option in cat_options:
+                    option_id = option['tree_id']
+                    option_value = option['val']
+                    parsed_options[option_id] = option_value
 
-        return {
-            'id': parse_int(name_element.attrs.get('auto_id')),
-            'is_new': True,
-            'origin_url': origin_url,
-            'name': name_element.text.strip(),
-            'model_id': name_element.attrs.get('model_id'),
-            'year': parse_int(year_element.text),
-            'price': parse_int(price_element.text),
-            'preview': preview,
-            # 'autosalon_id': name_element.attrs.get('autosalon_id'),
-            # 'marka_id': name_element.attrs.get('marka_id'),
-            # 'complectation_id': name_element.attrs.get('complete_id'),
-        }
+        data = {}
+        data['brand'] = api_data['marka']
+        data['complectation'] = api_data['complete']
+        data['model'] = api_data['model']
+        data['id'] = list_item_data['id']
+        data['name'] = list_item_data['name']
+        data['url'] = list_item_data['url']
+        data['is_new'] = True
+        data['price'] = api_data['price_uah']
+        data['preview'] = list_item_data['preview']
+        data['year'] = parse_int(api_data.get('year'))
+
+        return data
+
 
     async def parse_complectation(self, advertisement_id):
         api_url = self.ADVERTISEMENT_API_URL.format(advertisement_id)
