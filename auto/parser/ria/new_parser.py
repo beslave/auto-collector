@@ -53,6 +53,10 @@ class RiaNewParser(BaseRiaParser):
         advertisement_id = list_item_data['id']
         api_url = self.ADVERTISEMENT_API_URL.format(advertisement_id)
         api_data = await self.get_attempts(api_url)
+
+        if not api_data:
+            return {}
+
         options = api_data.get('options', {})
 
         parsed_options = {}
@@ -63,48 +67,49 @@ class RiaNewParser(BaseRiaParser):
                     option_value = option['val']
                     parsed_options[option_id] = option_value
 
-        data = {}
-        data['brand'] = api_data['marka']
-        data['complectation'] = api_data['complete']
-        data['model'] = api_data['model']
-        data['id'] = list_item_data['id']
-        data['name'] = list_item_data['name']
-        data['url'] = list_item_data['url']
-        data['is_new'] = True
-        data['price'] = api_data['price_uah']
-        data['preview'] = list_item_data['preview']
-        data['year'] = parse_int(api_data.get('year'))
-        data['body_type'] = api_data.get('bodystyle', '').lower()
-        data['doors'] = api_data.get('doors')
-        data['seats'] = api_data.get('seats')
-        data['length'] = api_data.get('length')
-        data['width'] = api_data.get('width')
-        data['height'] = api_data.get('height')
-        data['clearance'] = api_data.get('clearance')
-        data['curb_weight'] = parse_int(options.get(83))
-        data['max_allowed_weight'] = parse_int(options.get(84))
-        data['trunk_volume'] = parse_int(options.get(85))
-        data['fuel_tank_volume'] = parse_int(options.get(86))
-        data['wheel_base'] = parse_int(api_data.get('wheel_base'))
-        data['bearing_capacity'] = api_data.get('bearing_capacity')
-        data['engine_position'] = parsed_options.get(44, '').lower()
-        data['energy_source'] = api_data.get('fuel', '').lower()
-        data['cylinders_position'] = parsed_options.get(54, '').lower()
-        data['engine_volume'] = api_data.get('engine')
-        data['engine_cylinders'] = parse_int(api_data.get('cylinders'))
-        data['engine_valvas_count'] = parse_int(parsed_options.get(72))
-        data['engine_co2_emission'] = parse_int(parsed_options.get(81))
-        data['engine_euro_toxicity_norms'] = parse_roman(parsed_options.get(358))
-        data['engine_fuel_rate_mixed'] =  api_data.get('fuel_rate')
-        data['engine_fuel_rate_urban'] = options.get(65)
-        data['engine_fuel_rate_extra_urban'] = options.get(66)
-        data['gearbox_type'] = api_data.get('gear', '').lower()
-        data['drive_type'] = api_data.get('drive', '').lower()
-        data['gears_count'] = parse_int(parsed_options.get(93))
-        data['steer_amplifier'] = parsed_options.get(104, '').lower()
-        data['spread_diameter'] = parse_float_to_int(parsed_options.get(105), 100)
-        data['max_velocity'] = api_data.get('spped')
-        data['acceleration_time_to_100'] = parse_float_to_int(api_data.get('acceleration'), 1000)
+        data = {
+            'id': list_item_data['id'],
+            'is_new': True,
+            'name': list_item_data['name'],
+            'brand': api_data['marka'],
+            'model': api_data['model'],
+            'complectation': api_data['complete'],
+            'url': list_item_data['url'],
+            'price': api_data['price_uah'],
+            'preview': list_item_data['preview'],
+            'year': parse_int(api_data.get('year')),
+            'body_type': api_data.get('bodystyle', '').lower(),
+            'doors': api_data.get('doors'),
+            'seats': api_data.get('seats'),
+            'length': api_data.get('length'),
+            'width': api_data.get('width'),
+            'height': api_data.get('height'),
+            'clearance': api_data.get('clearance'),
+            'curb_weight': parse_int(options.get(83)),
+            'max_allowed_weight': parse_int(options.get(84)),
+            'trunk_volume': parse_int(options.get(85)),
+            'fuel_tank_volume': parse_int(options.get(86)),
+            'wheel_base': parse_int(api_data.get('wheel_base')),
+            'bearing_capacity': api_data.get('bearing_capacity'),
+            'engine_position': parsed_options.get(44, '').lower(),
+            'energy_source': api_data.get('fuel', '').lower(),
+            'cylinders_position': parsed_options.get(54, '').lower(),
+            'engine_volume': api_data.get('engine'),
+            'engine_cylinders': parse_int(api_data.get('cylinders')),
+            'engine_valvas_count': parse_int(parsed_options.get(72)),
+            'engine_co2_emission': parse_int(parsed_options.get(81)),
+            'engine_euro_toxicity_norms': parse_roman(parsed_options.get(358)),
+            'engine_fuel_rate_mixed':  api_data.get('fuel_rate'),
+            'engine_fuel_rate_urban': options.get(65),
+            'engine_fuel_rate_extra_urban': options.get(66),
+            'gearbox_type': api_data.get('gear', '').lower(),
+            'drive_type': api_data.get('drive', '').lower(),
+            'gears_count': parse_int(parsed_options.get(93)),
+            'steer_amplifier': parsed_options.get(104, '').lower(),
+            'spread_diameter': parse_float_to_int(parsed_options.get(105), 100),
+            'max_velocity': api_data.get('spped'),
+            'acceleration_time_to_100': parse_float_to_int(api_data.get('acceleration'), 1000),
+        }
 
         if parsed_options.get(62):
             (

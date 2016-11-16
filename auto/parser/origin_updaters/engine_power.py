@@ -15,3 +15,4 @@ class OriginEnginePowerUpdater(OriginUpdater):
     field_dependencies = {
         'id': 'engine.id',
     }
+    required_fields = ['id']

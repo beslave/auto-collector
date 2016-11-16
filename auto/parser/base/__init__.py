@@ -31,14 +31,15 @@ class BaseParser(object):
         while True:
             try:
                 async with self.client.get(url) as response:
-                    assert response.status < 400
+                    if response.status >= 400:
+                        print(response.status, response)
                     return await getattr(response, getter)()
 
             except Exception as e:
                 if retries > self.MAX_GET_ATTEMPTS:
                     raise
 
-                await asyncio.sleep(1)
+                await asyncio.sleep(retries * 1)
                 retries += 1
 
     async def init_updaters(self):

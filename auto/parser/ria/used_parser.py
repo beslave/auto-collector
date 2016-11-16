@@ -17,27 +17,32 @@ class RiaUsedParser(BaseRiaParser):
         first4 = round(int(adv_id[:5]), -1) // 10
         first6 = round(int(adv_id[:7]), -1) // 10
         adv_id = int(adv_id)
-        adv_url = self.ADV_URL.format(first4, first6, adv_id)
-        return await self.parse_advertisement(adv_url)
+        api_url = self.ADV_URL.format(first4, first6, adv_id)
+        api_data = await self.get_attempts(api_url)
 
-    async def parse_advertisement(self, adv_url):
-        data = await self.get_attempts(adv_url)
+        if not api_data:
+            return {}
 
-        preview = get_first_for_keys(data.get('photoData', {}), keys=[
+        auto_data = api_data.get('autoData')
+
+        preview = get_first_for_keys(api_data.get('photoData', {}), keys=[
             'seoLinkF',
             'seoLinkM',
             'seoLinkS',
             'seoLinkSX',
         ])
-        autoData = data['autoData']
 
-        return {
-            'id': autoData['autoId'],
+        data = {
+            'id': auto_data['autoId'],
             'is_new': False,
-            'origin_url': get_absolute_url(data['linkToView'], self.BASE_URL),
-            'name': data['title'].strip(),
-            'model_id': data['modelId'],
-            'year': autoData.get('year'),
-            'price': data['UAH'],
+            'name': api_data['title'].strip(),
+            'brand': api_data['markName'],
+            'model': api_data['modelName'],
+            'complectation': auto_data.get('version'),
+            'url': get_absolute_url(api_data['linkToView'], self.BASE_URL),
+            'price': api_data.get('UAH'),
             'preview': preview,
+            'year': auto_data.get('year'),
         }
+
+        return data

@@ -12,7 +12,7 @@ logger = logging.getLogger('auto.parser')
 def get_parsers(*args, **kwargs):
     return map(lambda Parser: Parser(*args, **kwargs), [
         RiaNewParser,
-        # RiaUsedParser,
+        RiaUsedParser,
     ])
 
 
