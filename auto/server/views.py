@@ -8,7 +8,12 @@ from functools import partial
 import settings
 
 from auto.connection import ConnectionManager
-from auto.models import Advertisement, Brand, Model
+from auto.models import (
+    Advertisement,
+    BodyType,
+    Brand,
+    Model,
+)
 
 
 def json_serialize(obj):
@@ -122,56 +127,36 @@ class ModelView(BaseApiView):
         return data
 
 
-class BrandListView(BaseApiView):
+class ApiListView(BaseApiView):
+    table = None
+    order_by = 'id'
+
+    async def get_json(self):
+        rows = await self.request.connection.execute(
+            self.table.select()
+            .order_by(getattr(self.table.c, self.order_by))
+        )
+
+        data = []
+        async for row in rows:
+            data.append(dict(row))
+
+        return data
+
+
+class BrandListView(ApiListView):
     table = Brand.__table__
-
-    async def get_json(self):
-        join = sa.join(self.table, Model.__table__).join(Advertisement.__table__)
-        adv_count = sa.func.count(Advertisement.__table__.c.id)
-
-        rows = await self.request.connection.execute(
-            self.table.select()
-            .select_from(join)
-            .where(Advertisement.__table__.c.price > 0)
-            .group_by(self.table.c.id)
-            .having(adv_count > 0)
-            .order_by(self.table.c.name)
-        )
-
-        data = []
-        async for row in rows:
-            data.append({
-                'id': row.id,
-                'name': row.name
-            })
-
-        return data
+    order_by = 'name'
 
 
-class ModelListView(BaseApiView):
+class ModelListView(ApiListView):
     table = Model.__table__
+    order_by = 'name'
 
-    async def get_json(self):
-        join = sa.join(self.table, Advertisement.__table__)
-        adv_count = sa.func.count(Advertisement.__table__.c.id)
-        rows = await self.request.connection.execute(
-            self.table.select()
-            .select_from(join)
-            .where(Advertisement.__table__.c.price > 0)
-            .group_by(self.table.c.id)
-            .having(adv_count > 0)
-            .order_by(self.table.c.name)
-        )
 
-        data = []
-        async for row in rows:
-            data.append({
-                'id': row.id,
-                'name': row.name,
-                'brand_id': row.brand_id,
-            })
-
-        return data
+class BodyTypeListView(ApiListView):
+    table = BodyType.__table__
+    order_by = 'name'
 
 
 class BaseAdvertisementRedirectView(web.View):

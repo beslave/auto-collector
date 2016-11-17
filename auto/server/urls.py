@@ -31,5 +31,6 @@ url_patterns = [
     Url(r'/api/', 'AutoDataView'),
     Url(r'/api/brands/', 'BrandListView'),
     Url(r'/api/models/', 'ModelListView'),
+    Url(r'/api/body-types/', 'BodyTypeListView'),
     Url(r'/api/models/{pk:\d+}/', 'ModelView'),
 ]

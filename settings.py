@@ -29,8 +29,8 @@ if 'DATABASE_URL' in os.environ:
         'password': url.password,
     }
 
-SITE_ADDR = '0.0.0.0'
-SITE_PORT = os.environ.get('PORT', 80)
+SITE_ADDR = os.environ.get('SITE_ADDR', '0.0.0.0')
+SITE_PORT = os.environ.get('SITE_PORT', 80)
 
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'auto', 'templates')
 STATIC_URL = 'http://127.0.0.1:8081/'
