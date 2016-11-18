@@ -4,8 +4,8 @@ var STORE_KEY = 'listFilters';
 
 module.exports = function ($scope, $rootScope, $filter, $resource, store, autoData) {
     autoData.filters = store.get(STORE_KEY) || {
+        bodyType: null,
         brand: null,
-        model: null,
         yearFrom: null,
         yearTo: null,
         isNew: true,
@@ -46,20 +46,6 @@ module.exports = function ($scope, $rootScope, $filter, $resource, store, autoDa
         store.set(STORE_KEY, autoData.filters);
         $rootScope.$broadcast('autoDataChanged', autoData);
     };
-
-    var updateModelsList = function () {
-        $scope.models = $filter('filter')($scope.autoData.models, {
-            brand: autoData.filters.brand
-        });
-        if ($scope.models.length === 1) {
-            autoData.filters.model = $scope.models[0];
-        }
-    };
-
-    $scope.$watch(function () {
-        return autoData.filters.brand;
-    }, updateModelsList);
-    $scope.$on('autoDataChanged', updateModelsList);
 
     setTimeout($scope.updateFilters, 0);
 };

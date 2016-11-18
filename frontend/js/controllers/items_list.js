@@ -26,7 +26,7 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
         var brand = model && autoData.getBrand(model.brand_id);
         var brandId = brand && brand.id;
         var filterBrandId = autoData.filters.brand && autoData.filters.brand.id;
-        var filterModelId = autoData.filters.model && autoData.filters.model.id;
+        var filterBodyTypeId = autoData.filters.bodyType && autoData.filters.bodyType.id;
 
         if (!autoData.filters.isNew && adv.is_new) {
             return false;
@@ -43,7 +43,7 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
         if (autoData.filters.brand && !angular.equals(filterBrandId, brandId)) {
             return false;
         }
-        if (autoData.filters.model && !angular.equals(filterModelId, adv.model_id)) {
+        if (autoData.filters.bodyType && !angular.equals(filterBodyTypeId, adv.body_type_id)) {
             return false;
         }
         return true;

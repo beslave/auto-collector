@@ -7,17 +7,13 @@ from functools import partial
 
 import settings
 
+from auto import models
 from auto.connection import ConnectionManager
-from auto.models import (
-    Advertisement,
-    BodyType,
-    Brand,
-    Model,
-)
 
 
 def json_serialize(obj):
     return str(obj)
+
 
 smart_json_dumps = partial(json.dumps, default=json_serialize)
 global_template_context = {
@@ -48,7 +44,8 @@ class IndexView(web.View):
 
 
 class AutoDataView(BaseApiView):
-    table = Advertisement.__table__
+    table = models.Advertisement.__table__
+    body_table = models.Body.__table__
 
     PER_PAGE = 50
 
@@ -60,8 +57,20 @@ class AutoDataView(BaseApiView):
             'price',
             'model_id',
         ]
+        select_from = self.table.join(
+            self.body_table,
+            self.table.c.complectation_id == self.body_table.c.complectation_id,
+            isouter=True,
+        )
+        select_fields = [
+            getattr(self.table.c, f) for f in fields
+        ] + [
+            self.body_table.c.body_type_id,
+        ]
+
         rows = await self.request.connection.execute(
-            sa.select([getattr(self.table.c, f) for f in fields])
+            sa.select(select_fields)
+            .select_from(select_from)
             .where(self.table.c.price > 0)
             .order_by(self.table.c.price)
         )
@@ -71,15 +80,16 @@ class AutoDataView(BaseApiView):
             rows_data.append(row.as_tuple())
 
         return {
-            'fields': fields,
+            'fields': fields + ['body_type_id'],
             'rows': rows_data,
         }
 
 
 class ModelView(BaseApiView):
-    brand_table = Brand.__table__
-    table = Model.__table__
-    adv_table = Advertisement.__table__
+    body_table = models.Body.__table__
+    brand_table = models.Brand.__table__
+    table = models.Model.__table__
+    adv_table = models.Advertisement.__table__
 
     async def get_json(self):
         model_id = int(self.request.match_info['pk'])
@@ -97,25 +107,38 @@ class ModelView(BaseApiView):
         )
         brand = await brand_result.fetchone()
 
-        query = (
-            self.adv_table
-            .select()
+        advertisement_fields = [
+            'id',
+            'is_new',
+            'name',
+            'price',
+            'year',
+            'preview',
+        ]
+        select_fields = [
+            getattr(self.adv_table.c, field) for field in advertisement_fields
+        ] + [
+            self.body_table.c.body_type_id,
+        ]
+        select_from = self.adv_table.join(
+            self.body_table,
+            self.adv_table.c.complectation_id == self.body_table.c.complectation_id,
+            isouter=True,
+        )
+        rows = await self.request.connection.execute(
+            sa.select(select_fields)
+            .select_from(select_from)
             .where(self.adv_table.c.model_id == model_id)
             .where(self.adv_table.c.price > 0)
             .order_by(self.adv_table.c.price)
         )
-        rows = await self.request.connection.execute(query)
 
         advertisements = []
+        fields = advertisement_fields + ['body_type_id']
+
         async for row in rows:
-            advertisements.append({
-                'id': row.id,
-                'is_new': row.is_new,
-                'name': row.name,
-                'price': row.price,
-                'year': row.year,
-                'preview': row.preview
-            })
+            data = dict(zip(fields, row.as_tuple()))
+            advertisements.append(data)
 
         data = dict(model)
         data['full_title'] = '{brand} {model}'.format(
@@ -145,22 +168,22 @@ class ApiListView(BaseApiView):
 
 
 class BrandListView(ApiListView):
-    table = Brand.__table__
+    table = models.Brand.__table__
     order_by = 'name'
 
 
 class ModelListView(ApiListView):
-    table = Model.__table__
+    table = models.Model.__table__
     order_by = 'name'
 
 
 class BodyTypeListView(ApiListView):
-    table = BodyType.__table__
+    table = models.BodyType.__table__
     order_by = 'name'
 
 
 class BaseAdvertisementRedirectView(web.View):
-    table = Advertisement.__table__
+    table = models.Advertisement.__table__
     cache = {}
 
     async def get(self):

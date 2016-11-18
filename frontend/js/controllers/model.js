@@ -46,6 +46,12 @@ module.exports = function ($scope, $filter, $location, $routeParams, store, auto
             filtered = $filter('filter')(filtered, {is_new: true});
         }
 
+        if (autoData.filters.bodyType) {
+            filtered = $filter('filter')(filtered, {
+                body_type_id: autoData.filters.bodyType.id
+            });
+        }
+
         if (autoData.filters.yearFrom) {
             filtered = filtered.filter(function (adv) {
                 return adv.year >= autoData.filters.yearFrom;
