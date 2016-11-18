@@ -1,6 +1,7 @@
 module.exports = function () {
     var data = {
         bodyTypes: [],
+        bodyTypesWithAdvertisements: [],
         bodyTypesPrimaryIndex: {},
         brands: [],
         brandsPrimaryIndex: {},

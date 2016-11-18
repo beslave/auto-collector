@@ -25,17 +25,17 @@
     <div class="form-group">
         <label for="brandFilter">Кузов</label>
         <select id="brandFilter" class="form-control"
-            ng-options="bodyType.name for bodyType in autoData.bodyTypes track by bodyType.id"
+            ng-options="bodyType.name for bodyType in autoData.bodyTypesWithAdvertisements track by bodyType.id"
             ng-model="autoData.filters.bodyType"
             ng-change="updateFilters('bodyType')"
         >
-            <option value="">Будь-яка</option>
+            <option value="">Будь-який</option>
         </select>
     </div>
     <div class="form-group">
         <label for="brandFilter">Марка</label>
         <select id="brandFilter" class="form-control"
-            ng-options="brand.name for brand in autoData.brands track by brand.id"
+            ng-options="brand.name for brand in autoData.brandsWithAdvertisements track by brand.id"
             ng-model="autoData.filters.brand"
             ng-change="updateFilters('brand')"
         >
