@@ -74,7 +74,7 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
                 bodyTypesWithAdvertisements[adv.body_type_id] = true;
             }
 
-            if (hasAdvertisements('brand')) {
+            if (model && hasAdvertisements('brand')) {
                 brandsWithAdvertisements[model.brand_id] = true;
             }
 

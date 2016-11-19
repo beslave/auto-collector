@@ -19,14 +19,14 @@ class RiaNewParser(BaseRiaParser):
         'catalog_name': 'category',
         'category_id': 1,
         'is_land': 1,
-        'lang_id': 2,
+        'lang_id': 4,
         'limit': 100,
         'order': 15,
         't': 'newdesign/search/search',
         'target': 'newauto_category',
     }
     ADVERTISEMENTS_LIST_API_GETTER = 'read'
-    ADVERTISEMENT_API_URL = 'https://auto.ria.com/newauto_blocks/search_ad?auto_id={}'
+    ADVERTISEMENT_API_URL = 'https://auto.ria.com/newauto_blocks/search_ad?lang_id=4&auto_id={}'
 
     async def get_advertisement_list_data(self, api_data):
         soup = BeautifulSoup(api_data, 'html.parser')

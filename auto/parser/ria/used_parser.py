@@ -4,11 +4,11 @@ from auto.utils import get_absolute_url, get_first_for_keys
 
 class RiaUsedParser(BaseRiaParser):
     ORIGIN = 'ria-used'
-    ADVERTISEMENTS_LIST_URL = 'https://s-ua.auto.ria.com/blocks_search_ajax/search/'
+    ADVERTISEMENTS_LIST_URL = 'https://s-ua.auto.ria.com/blocks_search_ajax/search/?lang_id=4'
     ADVERTISEMENTS_LIST_URL_PARAMS = {
         'countpage': 100,
     }
-    ADV_URL = 'https://c-ua1.riastatic.com/demo/bu/searchPage/v2/view/auto/{}/{}/{}?lang_id=2'
+    ADV_URL = 'https://c-ua1.riastatic.com/demo/bu/searchPage/v2/view/auto/{}/{}/{}?lang_id=4'
 
     async def get_advertisement_list_data(self, api_data):
         return api_data['result']['search_result']['ids']

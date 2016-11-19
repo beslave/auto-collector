@@ -1,3 +1,20 @@
 .ng-cloak {
   display: none !important;
 }
+
+.expand-arrow {
+    cursor: pointer;
+    position: relative;
+
+    &:after {
+        color: black;
+        content: '\25bc';
+        position: absolute;
+        right: $global-indent / 2;
+        top: 50%;
+        transform: translate3d(0, -50%, 0);
+    }
+    &__collapse:after {
+        content: '\25b2';
+    }
+}

@@ -1,20 +1,20 @@
 version: '2'
 services:
     db:
-        build:
-            context: .
-            dockerfile: Dockerfile.db
+        image: postgres:9
         environment:
             - POSTGRES_USER=auto_collector
             - POSTGRES_PASSWORD=auto_collector
             - POSTGRES_DB=auto_collector
             - PGDATA=/var/lib/postgresql/data/pgdata
+        restart: always
     frontend:
         build:
             context: .
             dockerfile: Dockerfile.frontend
         ports:
             - "8081:80"
+        restart: always
     server:
         build:
             context: .
@@ -29,6 +29,7 @@ services:
         ports:
             - "8080:80"
         command: python manage.py serve
+        restart: always
     parser:
         build:
             context: .
@@ -41,6 +42,7 @@ services:
             - POSTGRES_USER=auto_collector
             - POSTGRES_PASSWORD=auto_collector
             - POSTGRES_DB=auto_collector
+        restart: always
     synchronizer:
         build:
             context: .
@@ -51,3 +53,4 @@ services:
             - POSTGRES_USER=auto_collector
             - POSTGRES_PASSWORD=auto_collector
             - POSTGRES_DB=auto_collector
+        restart: always

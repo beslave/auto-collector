@@ -86,7 +86,6 @@ class AutoDataView(BaseApiView):
 
 
 class ModelView(BaseApiView):
-    body_table = models.Body.__table__
     brand_table = models.Brand.__table__
     table = models.Model.__table__
     adv_table = models.Advertisement.__table__
@@ -118,15 +117,114 @@ class ModelView(BaseApiView):
         select_fields = [
             getattr(self.adv_table.c, field) for field in advertisement_fields
         ] + [
-            self.body_table.c.body_type_id,
+            models.Body.__table__.c.doors,
+            models.Body.__table__.c.seats,
+            models.BodyType.__table__.c.id,
+            models.BodyType.__table__.c.name,
+            models.Dimensions.__table__.c.length,
+            models.Dimensions.__table__.c.width,
+            models.Dimensions.__table__.c.height,
+            models.Dimensions.__table__.c.clearance,
+            models.Dimensions.__table__.c.curb_weight,
+            models.Dimensions.__table__.c.max_allowed_weight,
+            models.Dimensions.__table__.c.trunk_volume,
+            models.Dimensions.__table__.c.fuel_tank_volume,
+            models.Dimensions.__table__.c.wheel_base,
+            models.Dimensions.__table__.c.bearing_capacity,
+            models.EnginePosition.__table__.c.name,
+            models.EnergySource.__table__.c.name,
+            models.Engine.__table__.c.volume,
+            models.Engine.__table__.c.cylinders,
+            models.EngineCylindersPosition.__table__.c.name,
+            models.EnginePower.__table__.c.horses,
+            models.EnginePower.__table__.c.rotations_start,
+            models.EnginePower.__table__.c.rotations_end,
+            models.EnginePower.__table__.c.max_torque,
+            models.EnginePower.__table__.c.max_torque_rotations_start,
+            models.EnginePower.__table__.c.max_torque_rotations_end,
+            models.EngineFuelRate.__table__.c.mixed,
+            models.EngineFuelRate.__table__.c.urban,
+            models.EngineFuelRate.__table__.c.extra_urban,
+            models.Engine.__table__.c.valves_count,
+            models.Engine.__table__.c.co2_emission,
+            models.Engine.__table__.c.euro_toxicity_norms,
+            models.GearboxType.__table__.c.name,
+            models.Transmission.__table__.c.gears_count,
+            models.DriveType.__table__.c.name,
+            models.SteerAmplifier.__table__.c.name,
+            models.Steering.__table__.c.spread_diameter,
+            models.DynamicCharacteristics.__table__.c.max_velocity,
+            models.DynamicCharacteristics.__table__.c.acceleration_time_to_100,
         ]
+
         select_from = self.adv_table.join(
-            self.body_table,
-            self.adv_table.c.complectation_id == self.body_table.c.complectation_id,
+            models.Complectation.__table__,
+            self.adv_table.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.Body.__table__,
+            models.Complectation.__table__.c.id == models.Body.__table__.c.complectation_id,
+            isouter=True,
+        ).join(
+            models.BodyType.__table__,
+            models.Body.__table__.c.body_type_id == models.BodyType.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.Dimensions.__table__,
+            models.Dimensions.__table__.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.Engine.__table__,
+            models.Engine.__table__.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.EnginePosition.__table__,
+            models.EnginePosition.__table__.c.id == models.Engine.__table__.c.position_id,
+            isouter=True,
+        ).join(
+            models.EnergySource.__table__,
+            models.EnergySource.__table__.c.id == models.Engine.__table__.c.energy_source_id,
+            isouter=True,
+        ).join(
+            models.EngineCylindersPosition.__table__,
+            models.EngineCylindersPosition.__table__.c.id == models.Engine.__table__.c.cylinders_position_id,
+            isouter=True,
+        ).join(
+            models.EnginePower.__table__,
+            models.EnginePower.__table__.c.id == models.Engine.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.EngineFuelRate.__table__,
+            models.EngineFuelRate.__table__.c.id == models.Engine.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.Transmission.__table__,
+            models.Transmission.__table__.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.GearboxType.__table__,
+            models.GearboxType.__table__.c.id == models.Transmission.__table__.c.gearbox_type_id,
+            isouter=True,
+        ).join(
+            models.DriveType.__table__,
+            models.DriveType.__table__.c.id == models.Transmission.__table__.c.drive_type_id,
+            isouter=True,
+        ).join(
+            models.Steering.__table__,
+            models.Steering.__table__.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.SteerAmplifier.__table__,
+            models.SteerAmplifier.__table__.c.id == models.Steering.__table__.c.amplifier_id,
+            isouter=True,
+        ).join(
+            models.DynamicCharacteristics.__table__,
+            models.DynamicCharacteristics.__table__.c.complectation_id == models.Complectation.__table__.c.id,
             isouter=True,
         )
+
         rows = await self.request.connection.execute(
-            sa.select(select_fields)
+            sa.select(select_fields, use_labels=True)
             .select_from(select_from)
             .where(self.adv_table.c.model_id == model_id)
             .where(self.adv_table.c.price > 0)
@@ -134,7 +232,46 @@ class ModelView(BaseApiView):
         )
 
         advertisements = []
-        fields = advertisement_fields + ['body_type_id']
+        fields = advertisement_fields + [
+            'doors',
+            'seats',
+            'body_type_id',
+            'body_type',
+            'length',
+            'width',
+            'height',
+            'clearance',
+            'curb_weight',
+            'max_allowed_weight',
+            'trunk_volume',
+            'fuel_tank_volume',
+            'wheel_base',
+            'bearing_capacity',
+            'engine_position',
+            'energy_source',
+            'engine_volume',
+            'engine_cylinders',
+            'engine_cylinders_position',
+            'engine_horses',
+            'engine_rotations_start',
+            'engine_rotations_end',
+            'engine_max_torque',
+            'engine_max_torque_rotations_start',
+            'engine_max_torque_rotations_end',
+            'engine_fuel_rate_mixed',
+            'engine_fuel_rate_urban',
+            'engine_fuel_rate_extra_urban',
+            'engine_valves_count',
+            'engine_co2_emission',
+            'engine_euro_toxicity_norms',
+            'gearbox_type',
+            'gears_count',
+            'drive_type',
+            'steer_amplifier',
+            'spread_diameter',
+            'max_velocity',
+            'acceleration_time_to_100',
+        ]
 
         async for row in rows:
             data = dict(zip(fields, row.as_tuple()))
