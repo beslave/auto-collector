@@ -17,6 +17,7 @@ settings_local.py
 /frontend/node_modules
 !/frontend/.jshintrc
 
+!/.meta
 !.gitkeep
 !.env
 !.dockerignore
