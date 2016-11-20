@@ -33,7 +33,11 @@ SITE_ADDR = os.environ.get('SITE_ADDR', '0.0.0.0')
 SITE_PORT = os.environ.get('SITE_PORT', 80)
 
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'auto', 'templates')
-STATIC_URL = 'http://127.0.0.1:8081/'
+STATIC_URL = '{static_protocol}://{static_host}:{static_port}/'.format(
+    static_protocol=os.environ.get('STATIC_PROTOCOL', 'http'),
+    static_host=os.environ.get('STATIC_HOST', '127.0.0.1'),
+    static_port=os.environ.get('STATIC_PORT', '8081'),
+)
 
 SHORTENER_API_URL = 'https://www.googleapis.com/urlshortener/v1/url'
 SHORTENER_API_KEY = ''
