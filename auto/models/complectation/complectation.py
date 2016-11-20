@@ -6,20 +6,16 @@ from auto.models.model import Model
 
 class BaseComplectation:
     id = sa.Column(sa.Integer, autoincrement=True)
-    name = sa.Column(sa.String, nullable=True)
+    model_id = sa.Column(sa.Integer, nullable=False)
+    name = sa.Column(sa.String, nullable=False)
 
 
 class Complectation(BaseComplectation, Base):
-    model_id = sa.Column(
-        sa.Integer,
-        sa.ForeignKey(Model.id),
-        nullable=False,
-    )
-
     __tablename__ = 'auto_complectation'
     __table_args__ = (
-        sa.UniqueConstraint('name', 'model_id', name='name_model_uc'),
         sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('name', 'model_id', name='name_model_uc'),
+        sa.ForeignKeyConstraint(['model_id'], ['auto_nmodel.id']),        
     )
 
 

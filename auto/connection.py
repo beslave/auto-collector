@@ -6,7 +6,7 @@ import aiopg.sa.engine
 import logging
 import psycopg2
 
-from auto import settings
+import settings
 
 
 logger = logging.getLogger('auto.connection')
@@ -30,6 +30,6 @@ class ConnectionManager:
         try:
             await self.engine.release(self.connection)
         except AssertionError as e:
-            logger.exception(e)
+            pass
 
         self.connection = None

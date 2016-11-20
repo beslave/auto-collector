@@ -4,7 +4,8 @@ import jinja2
 
 from aiohttp import web
 
-from auto import settings
+import settings
+
 from auto.server.middlewares import middlewares
 from auto.server.urls import url_patterns
 
@@ -17,14 +18,14 @@ aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(settings.TEMPLATE_DIR))
 for url in url_patterns:
     app.router.add_route(url.method, url.pattern, url.view)
 
-app_handler = app.make_handler()
-
 
 async def serve_task():
     return await loop.create_server(
-        app_handler,
-        settings.SITE_ADDR,
-        settings.SITE_PORT
+        app.make_handler(),
+        host=settings.SITE_ADDR,
+        port=settings.SITE_PORT,
+        # reuse_address=False,
+        # reuse_port=False,
     )
 
 

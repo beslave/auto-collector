@@ -1,68 +1,81 @@
-<div class="modal fade in" role="dialog" style="display: block;"
-    ng-click="closeModal($event)"
->
-<div class="modal-dialog modal-lg">
-<div class="modal-content" ng-click="$event.stopPropagation()">
+<div class="modal-content">
+    <div class="modal-header">
+        <a href="/" ng-click="closeModal($event)" class="close">&times;</a>
+        <h1>{{ model.full_title }}</h1>
+    </div>
 
-<div class="modal-header">
-    <a href="/" ng-click="closeModal($event)" class="close">&times;</a>
-    <h1>{{ model.full_title }}</h1>
-</div>
+    <div class="modal-body">
+        <div class="panel panel-default"
+            style="margin-bottom: 5px;"
+            ng-repeat="panel in panels" ng-if="panel.visible()"
+        >
+            <div class="panel-heading expand-arrow"
+                ng-click="panel.toggleExpand()"
+                ng-class="{'expand-arrow__collapse': panel.isExpanded}"
+            >{{ panel.title }}</div>
 
-<div class="modal-body">
-<table class="table advertisements-table">
-    <thead>
-        <tr>
-            <th class="advertisements-table_sortable"
-                ng-click="setOrderBy('name')"
-                ng-class="{
-                    'advertisements-table_sortable__active': ordering.by == 'name',
-                    'reversed': ordering.reverse
-                }"
-            >Назва</th>
-            <th class="advertisements-table_sortable"
-                ng-click="setOrderBy('year')"
-                ng-class="{
-                    'advertisements-table_sortable__active': ordering.by == 'year',
-                    'reversed': ordering.reverse
-                }"
-            >Рік</th>
-            <th class="advertisements-table_sortable"
-                ng-click="setOrderBy('price')"
-                ng-class="{
-                    'advertisements-table_sortable__active': ordering.by == 'price',
-                    'reversed': ordering.reverse
-                }"
-            >Ціна</th>
-            <th>Фото</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr ng-repeat="adv in filteredAdvertisements|orderBy:ordering.by:ordering.reverse">
-            <td>
-                <a ng-href="{{ getAdvertisementUrl(adv) }}" target="_blank">
-                    {{ adv.name }}
-                </a>
-            </td>
-            <td>{{ adv.year }}</td>
-            <td>
-                {{ adv.price | number }} грн.
-            </td>
-            <td>
-                <a ng-href="{{ getAdvertisementUrl(adv) }}" target="_blank">
-                    <img ng-src="{{ adv.preview }}" height="64px" />
-                </a>
-            </td>
-        </tr>
-    </tbody>
-</table>
-</div>
+            <div class="panel-body" ng-if="panel.isExpanded">
+                <div class="row" ng-repeat="field in panel.fields" ng-if="field.visible()">
+                    <div class="col-xs-6">{{ field.title }}:</div>
+                    <div class="col-xs-6">
+                        <span ng-repeat="value in field.valuesList | orderBy"
+                            class="btn btn-default btn-xs"
+                        >{{ value }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<div class="modal-footer">
-    <a href="/" ng-click="closeModal($event)" class="btn btn-default" data-dismiss="modal">Закрити</a>
-</div>
+        <h3>Оголошення:</h3>
+        <table class="table advertisements-table">
+            <thead>
+                <tr>
+                    <th class="advertisements-table_sortable"
+                        ng-click="setOrderBy('name')"
+                        ng-class="{
+                            'advertisements-table_sortable__active': ordering.by == 'name',
+                            'reversed': ordering.reverse
+                        }"
+                    >Назва</th>
+                    <th class="advertisements-table_sortable"
+                        ng-click="setOrderBy('year')"
+                        ng-class="{
+                            'advertisements-table_sortable__active': ordering.by == 'year',
+                            'reversed': ordering.reverse
+                        }"
+                    >Рік</th>
+                    <th class="advertisements-table_sortable"
+                        ng-click="setOrderBy('price')"
+                        ng-class="{
+                            'advertisements-table_sortable__active': ordering.by == 'price',
+                            'reversed': ordering.reverse
+                        }"
+                    >Ціна</th>
+                    <th>Фото</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="adv in filteredAdvertisements|orderBy:ordering.by:ordering.reverse">
+                    <td>
+                        <a ng-href="{{ getAdvertisementUrl(adv) }}" target="_blank">
+                            {{ adv.name }}
+                        </a>
+                    </td>
+                    <td>{{ adv.year }}</td>
+                    <td>
+                        {{ adv.price | number }} грн.
+                    </td>
+                    <td>
+                        <a ng-href="{{ getAdvertisementUrl(adv) }}" target="_blank">
+                            <img ng-src="{{ adv.preview }}" height="64px" />
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
+    <div class="modal-footer">
+        <a href="/" ng-click="closeModal($event)" class="btn btn-default" data-dixsiss="modal">Закрити</a>
+    </div>
 </div>
-</div>
-</div>
-<div class="modal-backdrop fade in"></div>

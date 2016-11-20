@@ -1,11 +1,17 @@
 module.exports = function () {
     var data = {
+        bodyTypes: [],
+        bodyTypesWithAdvertisements: [],
+        bodyTypesPrimaryIndex: {},
         brands: [],
         brandsPrimaryIndex: {},
         models: [],
         modelsPrimaryIndex: {},
         filters: [],
 
+        getBodyType: function (bodyTypeId) {
+            return this.bodyTypesPrimaryIndex[brandId];
+        },
         getBrand: function (brandId) {
             return this.brandsPrimaryIndex[brandId];
         },
@@ -22,6 +28,10 @@ module.exports = function () {
     };
 
     this.$get = function ($rootScope, $resource, resourceModels) {
+        data.bodyTypes = resourceModels.BodyType.query(function (results) {
+            syncPrimaryIndex(data.bodyTypes, data.bodyTypesPrimaryIndex, 'id');
+            $rootScope.$broadcast('autoDataChanged', data);
+        });
         data.brands = resourceModels.Brand.query(function (results) {
             data.models = resourceModels.Model.query(function (results) {
                 data.models.forEach(function (model) {

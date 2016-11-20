@@ -211,7 +211,7 @@ def upgrade():
     )
     op.create_table('auto_enginepower',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('horses', sa.Integer(), nullable=False),
+    sa.Column('horses', sa.Integer(), nullable=True),
     sa.Column('rotations_start', sa.Integer(), nullable=True),
     sa.Column('rotations_end', sa.Integer(), nullable=True),
     sa.Column('max_torque', sa.Integer(), nullable=True),
@@ -329,7 +329,7 @@ def upgrade():
     op.create_index(op.f('ix_auto_originenginefuelrate_origin'), 'auto_originenginefuelrate', ['origin'], unique=False)
     op.create_table('auto_originenginepower',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('horses', sa.Integer(), nullable=False),
+    sa.Column('horses', sa.Integer(), nullable=True),
     sa.Column('rotations_start', sa.Integer(), nullable=True),
     sa.Column('rotations_end', sa.Integer(), nullable=True),
     sa.Column('max_torque', sa.Integer(), nullable=True),

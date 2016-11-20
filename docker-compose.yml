@@ -7,33 +7,50 @@ services:
             - POSTGRES_PASSWORD=auto_collector
             - POSTGRES_DB=auto_collector
             - PGDATA=/var/lib/postgresql/data/pgdata
-        # volumes:
-        #     - .volumes/postgresql:/var/lib/postgresql/data/pgdata:rw
+        restart: always
     frontend:
         build:
             context: .
             dockerfile: Dockerfile.frontend
         ports:
             - "8081:80"
-    app:
+        restart: always
+    server:
         build:
             context: .
             dockerfile: Dockerfile.app
-    server:
-        extends: app
         depends_on:
-            - app
             - db
+        environment:
+            - POSTGRES_HOST=db
+            - POSTGRES_USER=auto_collector
+            - POSTGRES_PASSWORD=auto_collector
+            - POSTGRES_DB=auto_collector
         ports:
             - "8080:80"
-        command: ./deploy/entry_scripts/wait-for-it.sh db:5432 -t 0 -- python manage.py serve
+        command: python manage.py serve
+        restart: always
     parser:
-        extends:
-            service:
-                app
-        command: ./deploy/entry_scripts/wait-for-it.sh db:5432 -t 0 -- python manage.py parse
+        build:
+            context: .
+            dockerfile: Dockerfile.app
+        command: python manage.py parse
+        depends_on:
+            - db
+        environment:
+            - POSTGRES_HOST=db
+            - POSTGRES_USER=auto_collector
+            - POSTGRES_PASSWORD=auto_collector
+            - POSTGRES_DB=auto_collector
+        restart: always
     synchronizer:
-        extends:
-            service:
-                app
-        command: ./deploy/entry_scripts/wait-for-it.sh db:5432 -t 0 -- python manage.py synchronize
+        build:
+            context: .
+            dockerfile: Dockerfile.app
+        command: python manage.py synchronize
+        environment:
+            - POSTGRES_HOST=db
+            - POSTGRES_USER=auto_collector
+            - POSTGRES_PASSWORD=auto_collector
+            - POSTGRES_DB=auto_collector
+        restart: always

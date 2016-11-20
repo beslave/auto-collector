@@ -5,13 +5,15 @@ from aiohttp import web
 from aiohttp_jinja2 import render_template as jinja2_render_template
 from functools import partial
 
-from auto import settings
+import settings
+
+from auto import models
 from auto.connection import ConnectionManager
-from auto.models import Advertisement, Brand, Model
 
 
 def json_serialize(obj):
     return str(obj)
+
 
 smart_json_dumps = partial(json.dumps, default=json_serialize)
 global_template_context = {
@@ -42,7 +44,8 @@ class IndexView(web.View):
 
 
 class AutoDataView(BaseApiView):
-    table = Advertisement.__table__
+    table = models.Advertisement.__table__
+    body_table = models.Body.__table__
 
     PER_PAGE = 50
 
@@ -54,8 +57,20 @@ class AutoDataView(BaseApiView):
             'price',
             'model_id',
         ]
+        select_from = self.table.join(
+            self.body_table,
+            self.table.c.complectation_id == self.body_table.c.complectation_id,
+            isouter=True,
+        )
+        select_fields = [
+            getattr(self.table.c, f) for f in fields
+        ] + [
+            self.body_table.c.body_type_id,
+        ]
+
         rows = await self.request.connection.execute(
-            sa.select([getattr(self.table.c, f) for f in fields])
+            sa.select(select_fields)
+            .select_from(select_from)
             .where(self.table.c.price > 0)
             .order_by(self.table.c.price)
         )
@@ -65,15 +80,15 @@ class AutoDataView(BaseApiView):
             rows_data.append(row.as_tuple())
 
         return {
-            'fields': fields,
+            'fields': fields + ['body_type_id'],
             'rows': rows_data,
         }
 
 
 class ModelView(BaseApiView):
-    brand_table = Brand.__table__
-    table = Model.__table__
-    adv_table = Advertisement.__table__
+    brand_table = models.Brand.__table__
+    table = models.Model.__table__
+    adv_table = models.Advertisement.__table__
 
     async def get_json(self):
         model_id = int(self.request.match_info['pk'])
@@ -91,25 +106,176 @@ class ModelView(BaseApiView):
         )
         brand = await brand_result.fetchone()
 
-        query = (
-            self.adv_table
-            .select()
+        advertisement_fields = [
+            'id',
+            'is_new',
+            'name',
+            'price',
+            'year',
+            'preview',
+        ]
+        select_fields = [
+            getattr(self.adv_table.c, field) for field in advertisement_fields
+        ] + [
+            models.Body.__table__.c.doors,
+            models.Body.__table__.c.seats,
+            models.BodyType.__table__.c.id,
+            models.BodyType.__table__.c.name,
+            models.Dimensions.__table__.c.length,
+            models.Dimensions.__table__.c.width,
+            models.Dimensions.__table__.c.height,
+            models.Dimensions.__table__.c.clearance,
+            models.Dimensions.__table__.c.curb_weight,
+            models.Dimensions.__table__.c.max_allowed_weight,
+            models.Dimensions.__table__.c.trunk_volume,
+            models.Dimensions.__table__.c.fuel_tank_volume,
+            models.Dimensions.__table__.c.wheel_base,
+            models.Dimensions.__table__.c.bearing_capacity,
+            models.EnginePosition.__table__.c.name,
+            models.EnergySource.__table__.c.name,
+            models.Engine.__table__.c.volume,
+            models.Engine.__table__.c.cylinders,
+            models.EngineCylindersPosition.__table__.c.name,
+            models.EnginePower.__table__.c.horses,
+            models.EnginePower.__table__.c.rotations_start,
+            models.EnginePower.__table__.c.rotations_end,
+            models.EnginePower.__table__.c.max_torque,
+            models.EnginePower.__table__.c.max_torque_rotations_start,
+            models.EnginePower.__table__.c.max_torque_rotations_end,
+            models.EngineFuelRate.__table__.c.mixed,
+            models.EngineFuelRate.__table__.c.urban,
+            models.EngineFuelRate.__table__.c.extra_urban,
+            models.Engine.__table__.c.valves_count,
+            models.Engine.__table__.c.co2_emission,
+            models.Engine.__table__.c.euro_toxicity_norms,
+            models.GearboxType.__table__.c.name,
+            models.Transmission.__table__.c.gears_count,
+            models.DriveType.__table__.c.name,
+            models.SteerAmplifier.__table__.c.name,
+            models.Steering.__table__.c.spread_diameter,
+            models.DynamicCharacteristics.__table__.c.max_velocity,
+            models.DynamicCharacteristics.__table__.c.acceleration_time_to_100,
+        ]
+
+        select_from = self.adv_table.join(
+            models.Complectation.__table__,
+            self.adv_table.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.Body.__table__,
+            models.Complectation.__table__.c.id == models.Body.__table__.c.complectation_id,
+            isouter=True,
+        ).join(
+            models.BodyType.__table__,
+            models.Body.__table__.c.body_type_id == models.BodyType.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.Dimensions.__table__,
+            models.Dimensions.__table__.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.Engine.__table__,
+            models.Engine.__table__.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.EnginePosition.__table__,
+            models.EnginePosition.__table__.c.id == models.Engine.__table__.c.position_id,
+            isouter=True,
+        ).join(
+            models.EnergySource.__table__,
+            models.EnergySource.__table__.c.id == models.Engine.__table__.c.energy_source_id,
+            isouter=True,
+        ).join(
+            models.EngineCylindersPosition.__table__,
+            models.EngineCylindersPosition.__table__.c.id == models.Engine.__table__.c.cylinders_position_id,
+            isouter=True,
+        ).join(
+            models.EnginePower.__table__,
+            models.EnginePower.__table__.c.id == models.Engine.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.EngineFuelRate.__table__,
+            models.EngineFuelRate.__table__.c.id == models.Engine.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.Transmission.__table__,
+            models.Transmission.__table__.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.GearboxType.__table__,
+            models.GearboxType.__table__.c.id == models.Transmission.__table__.c.gearbox_type_id,
+            isouter=True,
+        ).join(
+            models.DriveType.__table__,
+            models.DriveType.__table__.c.id == models.Transmission.__table__.c.drive_type_id,
+            isouter=True,
+        ).join(
+            models.Steering.__table__,
+            models.Steering.__table__.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        ).join(
+            models.SteerAmplifier.__table__,
+            models.SteerAmplifier.__table__.c.id == models.Steering.__table__.c.amplifier_id,
+            isouter=True,
+        ).join(
+            models.DynamicCharacteristics.__table__,
+            models.DynamicCharacteristics.__table__.c.complectation_id == models.Complectation.__table__.c.id,
+            isouter=True,
+        )
+
+        rows = await self.request.connection.execute(
+            sa.select(select_fields, use_labels=True)
+            .select_from(select_from)
             .where(self.adv_table.c.model_id == model_id)
             .where(self.adv_table.c.price > 0)
             .order_by(self.adv_table.c.price)
         )
-        rows = await self.request.connection.execute(query)
 
         advertisements = []
+        fields = advertisement_fields + [
+            'doors',
+            'seats',
+            'body_type_id',
+            'body_type',
+            'length',
+            'width',
+            'height',
+            'clearance',
+            'curb_weight',
+            'max_allowed_weight',
+            'trunk_volume',
+            'fuel_tank_volume',
+            'wheel_base',
+            'bearing_capacity',
+            'engine_position',
+            'energy_source',
+            'engine_volume',
+            'engine_cylinders',
+            'engine_cylinders_position',
+            'engine_horses',
+            'engine_rotations_start',
+            'engine_rotations_end',
+            'engine_max_torque',
+            'engine_max_torque_rotations_start',
+            'engine_max_torque_rotations_end',
+            'engine_fuel_rate_mixed',
+            'engine_fuel_rate_urban',
+            'engine_fuel_rate_extra_urban',
+            'engine_valves_count',
+            'engine_co2_emission',
+            'engine_euro_toxicity_norms',
+            'gearbox_type',
+            'gears_count',
+            'drive_type',
+            'steer_amplifier',
+            'spread_diameter',
+            'max_velocity',
+            'acceleration_time_to_100',
+        ]
+
         async for row in rows:
-            advertisements.append({
-                'id': row.id,
-                'is_new': row.is_new,
-                'name': row.name,
-                'price': row.price,
-                'year': row.year,
-                'preview': row.preview
-            })
+            data = dict(zip(fields, row.as_tuple()))
+            advertisements.append(data)
 
         data = dict(model)
         data['full_title'] = '{brand} {model}'.format(
@@ -121,60 +287,40 @@ class ModelView(BaseApiView):
         return data
 
 
-class BrandListView(BaseApiView):
-    table = Brand.__table__
+class ApiListView(BaseApiView):
+    table = None
+    order_by = 'id'
 
     async def get_json(self):
-        join = sa.join(self.table, Model.__table__).join(Advertisement.__table__)
-        adv_count = sa.func.count(Advertisement.__table__.c.id)
-
         rows = await self.request.connection.execute(
             self.table.select()
-            .select_from(join)
-            .where(Advertisement.__table__.c.price > 0)
-            .group_by(self.table.c.id)
-            .having(adv_count > 0)
-            .order_by(self.table.c.name)
+            .order_by(getattr(self.table.c, self.order_by))
         )
 
         data = []
         async for row in rows:
-            data.append({
-                'id': row.id,
-                'name': row.name
-            })
+            data.append(dict(row))
 
         return data
 
 
-class ModelListView(BaseApiView):
-    table = Model.__table__
+class BrandListView(ApiListView):
+    table = models.Brand.__table__
+    order_by = 'name'
 
-    async def get_json(self):
-        join = sa.join(self.table, Advertisement.__table__)
-        adv_count = sa.func.count(Advertisement.__table__.c.id)
-        rows = await self.request.connection.execute(
-            self.table.select()
-            .select_from(join)
-            .where(Advertisement.__table__.c.price > 0)
-            .group_by(self.table.c.id)
-            .having(adv_count > 0)
-            .order_by(self.table.c.name)
-        )
 
-        data = []
-        async for row in rows:
-            data.append({
-                'id': row.id,
-                'name': row.name,
-                'brand_id': row.brand_id,
-            })
+class ModelListView(ApiListView):
+    table = models.Model.__table__
+    order_by = 'name'
 
-        return data
+
+class BodyTypeListView(ApiListView):
+    table = models.BodyType.__table__
+    order_by = 'name'
 
 
 class BaseAdvertisementRedirectView(web.View):
-    table = Advertisement.__table__
+    table = models.Advertisement.__table__
     cache = {}
 
     async def get(self):

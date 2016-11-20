@@ -1,18 +1,21 @@
 import os
 import sys
 
-from urllib.parse import urlparse
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(__file__)
 
 SYNC_TIMEOUT = 10
 DATABASE = {
-    'host': 'db',
-    'port': 5432,
-    'database': 'auto_collector',
-    'user': 'auto_collector',
-    'password': 'auto_collector',
+    'host': os.environ.get('POSTGRES_HOST', 'localhost'),
+    'port': os.environ.get('POSTGRES_PORT', 5432),
+    'database': os.environ.get('POSTGRES_DB', 'auto_collector'),
+    'user': os.environ.get('POSTGRES_USER', 'auto_collector'),
+    'password': os.environ.get('POSTGRES_PASSWORD', 'auto_collector'),
 }
 
 if 'DATABASE_URL' in os.environ:
@@ -26,8 +29,8 @@ if 'DATABASE_URL' in os.environ:
         'password': url.password,
     }
 
-SITE_ADDR = '0.0.0.0'
-SITE_PORT = os.environ.get('PORT', 80)
+SITE_ADDR = os.environ.get('SITE_ADDR', '0.0.0.0')
+SITE_PORT = os.environ.get('SITE_PORT', 80)
 
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'auto', 'templates')
 STATIC_URL = 'http://127.0.0.1:8081/'

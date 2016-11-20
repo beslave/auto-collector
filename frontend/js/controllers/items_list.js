@@ -18,41 +18,67 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
             return a + b;
         }, 0) / values.length;
     };
+
     var getGroupKey = function (adv) {
         return adv.model_id;
     };
-    var isSatisfyFilters = function (adv) {
+
+    var notSatisfyFilters = function (adv) {
+        var notSatisfy = [];
         var model = autoData.getModel(adv.model_id);
         var brand = model && autoData.getBrand(model.brand_id);
         var brandId = brand && brand.id;
         var filterBrandId = autoData.filters.brand && autoData.filters.brand.id;
-        var filterModelId = autoData.filters.model && autoData.filters.model.id;
+        var filterBodyTypeId = autoData.filters.bodyType && autoData.filters.bodyType.id;
 
         if (!autoData.filters.isNew && adv.is_new) {
-            return false;
+            notSatisfy.push('isNew');
         }
         if (!autoData.filters.isUsed && !adv.is_new) {
-            return false;
+            notSatisfy.push('isUsed');
         }
         if (autoData.filters.yearFrom && adv.year < autoData.filters.yearFrom) {
-            return false;
+            notSatisfy.push('yearFrom');
         }
         if (autoData.filters.yearTo && adv.year > autoData.filters.yearTo) {
-            return false;
+            notSatisfy.push('yearTo');
         }
         if (autoData.filters.brand && !angular.equals(filterBrandId, brandId)) {
-            return false;
+            notSatisfy.push('brand');
         }
-        if (autoData.filters.model && !angular.equals(filterModelId, adv.model_id)) {
-            return false;
+        if (autoData.filters.bodyType && !angular.equals(filterBodyTypeId, adv.body_type_id)) {
+            notSatisfy.push('bodyType');
         }
-        return true;
+        return notSatisfy;
     };
 
     var updateItems = function () {
+        var isSatisfyFilters;
+        var notSatisfiedFilters;
         var grouped_items = {};
+        var bodyTypesWithAdvertisements = {};
+        var brandsWithAdvertisements = {};
+        var model;
+
         advertisements.forEach(function (adv) {
-            if (!isSatisfyFilters(adv)) {
+            notSatisfiedFilters = notSatisfyFilters(adv);
+            isSatisfyFilters = notSatisfiedFilters.length === 0;
+            model = autoData.getModel(adv.model_id);
+
+            var hasAdvertisements = function (filterName) {
+                var onlyCurrentUsed = notSatisfiedFilters.length === 1 && notSatisfiedFilters[0] === filterName;
+                return isSatisfyFilters || onlyCurrentUsed;
+            };
+
+            if (hasAdvertisements('bodyType')) {
+                bodyTypesWithAdvertisements[adv.body_type_id] = true;
+            }
+
+            if (model && hasAdvertisements('brand')) {
+                brandsWithAdvertisements[model.brand_id] = true;
+            }
+
+            if (!isSatisfyFilters) {
                 return;
             }
 
@@ -96,6 +122,13 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
 
         $scope.filteredItems = $filter('orderBy')($scope.items, 'price_avg');
         $scope.limitedItems = $filter('limitTo')($scope.filteredItems, $scope.showItemsCount);
+
+        autoData.bodyTypesWithAdvertisements = autoData.bodyTypes.filter(function (bodyType) {
+            return bodyType.id in bodyTypesWithAdvertisements;
+        });
+        autoData.brandsWithAdvertisements = autoData.brands.filter(function (brand) {
+            return brand.id in brandsWithAdvertisements;
+        });
 
         loadExtraItems();
         $scope.$applyAsync();

@@ -2,7 +2,7 @@
 
 require('angular-storage');
 
-var app = require('./app.js');
+var app = require('./app');
 var controllers = require('./controllers');
 var providers = require('./providers');
 

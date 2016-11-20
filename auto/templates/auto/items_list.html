@@ -1,5 +1,5 @@
 <div class="row">
-{% raw %}
+    {% raw %}
     <p class="col-xs-12 text-warning item" ng-show="limitedItems.length === 0">
         Немає оголошень що задовільняють обрані параметри пошуку
     </p>
@@ -15,6 +15,5 @@
         <span class="item_title">{{ item.title }}</span>
         <span class="item_price">{{ item.price }}</span>
     </a>
-{% endraw %}
-<div class="item-preview" ng-view></div>
+    {% endraw %}
 </div>

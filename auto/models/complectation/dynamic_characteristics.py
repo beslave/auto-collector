@@ -7,7 +7,7 @@ class BaseDynamicCharacteristics:
     id = sa.Column(sa.Integer, autoincrement=True)
     complectation_id = sa.Column(sa.Integer, nullable=False)
     max_velocity = sa.Column(sa.Integer, nullable=True)
-    acceleration_time_to_100 = sa.Column(sa.Integer, nullable=True)
+    acceleration_time_to_100 = sa.Column(sa.Integer, nullable=True)  # ms
 
 
 class DynamicCharacteristics(BaseDynamicCharacteristics, Base):

@@ -8,8 +8,9 @@ from alembic import context
 from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
 
-from auto import settings
-from auto.models import Base
+import settings
+
+from migrations.models_base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

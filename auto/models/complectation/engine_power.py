@@ -5,7 +5,7 @@ from auto.models.base import Base, WithOrigin
 
 class BaseEnginePower:
     id = sa.Column(sa.Integer, autoincrement=True)
-    horses = sa.Column(sa.Integer, nullable=False)
+    horses = sa.Column(sa.Integer, nullable=True)
     rotations_start = sa.Column(sa.Integer, nullable=True)
     rotations_end = sa.Column(sa.Integer, nullable=True)
     max_torque = sa.Column(sa.Integer, nullable=True)
