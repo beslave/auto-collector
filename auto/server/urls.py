@@ -23,7 +23,8 @@ class Url:
 
 url_patterns = [
     Url(r'/', 'IndexView'),
-    Url(r'/{pk:\d+}/', 'IndexView'),
+    Url(r'/compare/', 'IndexView'),  # compare view
+    Url(r'/{pk:\d+}/', 'IndexView'),  # model view
 
     Url(r'/advertisement/{pk:\d+}/go/', 'RedirectToOriginView'),
     Url(r'/advertisement/{pk:\d+}/preview/', 'AdvertisementPreviewView'),

@@ -15,11 +15,11 @@
             >{{ panel.title }}</div>
 
             <div class="panel-body" ng-if="panel.isExpanded">
-                <div class="row" ng-repeat="field in panel.fields" ng-if="field.visible()">
-                    <div class="col-xs-6">{{ field.title }}:</div>
-                    <div class="col-xs-6">
+                <div class="panel-field" ng-repeat="field in panel.fields" ng-if="field.visible()">
+                    <div class="panel-field_title">{{ field.title }}:</div>
+                    <div class="panel-field_values-list">
                         <span ng-repeat="value in field.valuesList | orderBy"
-                            class="btn btn-default btn-xs"
+                            class="panel-field_value"
                         >{{ value }}</span>
                     </div>
                 </div>

@@ -6,9 +6,15 @@ module.exports = function (title, fields) {
     this.populateData = function (data) {
         angular.forEach(this.fields, function (field) {
             var value = data[field.field];
+
+            if (field.converter) {
+                value = field.converter(value);
+            }
+
             if (value == null || value in field.valuesIndex) {
                 return;
             }
+
             field.valuesIndex[value] = true;
             field.valuesList.push(value);
         }, this);
@@ -24,10 +30,17 @@ module.exports = function (title, fields) {
         this.isExpanded = !this.isExpanded;
     };
 
-    angular.forEach(fields, function (fieldTitle, field) {
+    angular.forEach(fields, function (fieldOptions, field) {
+        if (angular.isString(fieldOptions)) {
+            fieldOptions = {
+                title: fieldOptions
+            };
+        }
+
         this.push({
             field: field,
-            title: fieldTitle,
+            title: fieldOptions.title,
+            converter: fieldOptions.converter,
             valuesList: [],
             valuesIndex: {},
 

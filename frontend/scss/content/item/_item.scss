@@ -1,4 +1,7 @@
 .item {
+    $text-padding: $global-indent / 3;
+    $compare-icon_size: $font-size_small + 4 * $text-padding;
+
     position: relative;
     margin: $global-indent / 2 0;
 
@@ -15,16 +18,64 @@
     &_title {
         top: $global-indent;
         left: $global-indent;
+        font-size: $font-size_medium;
+        font-weight: bold;
+        color: $color-text;
     }
     &_price {
         bottom: $global-indent;
         right: $global-indent;
-    }
-    &_title, &_price {
+        font-size: $font-size_small;
         font-weight: bold;
+        color: $color-text;
+    }
+    &_title, &_price, &_compare-text {
         background-color: rgba(white, 0.7);
-        border-radius: $global-indent / 3;
-        padding: $global-indent / 3;
+        border-radius: $text-padding;
+        padding: $text-padding;
         position: absolute;
+    }
+    &_compare {
+        position: absolute;
+        bottom: $global-indent - $text-padding;
+        left: $global-indent;
+        height: $compare-icon_size;
+        width: 50%;
+        opacity: 0;
+        transition: opacity $transition-time-small;
+
+        &__added, .item:hover & {
+            opacity: 1;
+        }
+    }
+    &_compare-svg {
+        width: $compare-icon_size;
+        height: $compare-icon_size;
+        position: absolute;
+
+        .background {
+            fill: #4CAF50;
+            transition: fill $transition-time-small;
+
+            .item_compare__added & {
+                fill: #ff5722;
+            }
+        }
+        .scale {
+            fill: #FFFFFF;
+        }
+    }
+    &_compare-text {
+        font-size: $font-size_small;
+        font-weight: bold;
+        padding-left: $text-padding / 2 + $compare-icon_size / 2;
+        bottom: $text-padding;
+        left: $compare-icon_size / 2;
+        opacity: 0;
+        transition: opacity $transition-time-small;
+
+        .item_compare:hover & {
+            opacity: 1;
+        }
     }
 }

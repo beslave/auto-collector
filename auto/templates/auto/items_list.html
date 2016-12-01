@@ -14,6 +14,21 @@
         </div>
         <span class="item_title">{{ item.title }}</span>
         <span class="item_price">{{ item.price }}</span>
+
+        <span class="item_compare"
+            ng-class="{item_compare__added: inComparison(item.model_id)}"
+            ng-click="toggleCompareState(item.model_id, $event)"
+        >
+            <div class="item_compare-text"
+                ng-bind="inComparison(item.model_id) ? 'Видалити з порівняння' : 'Додати в порівняння'"
+            ></div>
+
+            {% endraw %}
+                {% with compare_svg_class = 'item_compare-svg' %}
+                    {% include 'svg/compare.svg' %}
+                {% endwith %}
+            {% raw %}
+        </span>
     </a>
     {% endraw %}
 </div>

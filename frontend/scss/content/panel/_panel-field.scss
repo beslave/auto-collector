@@ -1,0 +1,22 @@
+.panel-field {
+    @extend .row;
+
+    &_title {
+        @extend .col-xs-6;
+
+        font-size: $font-size_small;
+    }
+    &_values-list {
+        @extend .col-xs-6;
+    }
+    &_value {
+        font-size: $font-size_small;
+
+        &:after {
+            content: ", ";
+        }
+        &:last-child:after {
+            content: none;
+        }
+    }
+}

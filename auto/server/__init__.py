@@ -13,7 +13,11 @@ from auto.server.urls import url_patterns
 loop = asyncio.get_event_loop()
 app = web.Application(middlewares=middlewares)
 
-aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(settings.TEMPLATE_DIR))
+aiohttp_jinja2.setup(
+    app,
+    loader=jinja2.FileSystemLoader(settings.TEMPLATE_DIR),
+    extensions=['jinja2.ext.with_'],
+)
 
 for url in url_patterns:
     app.router.add_route(url.method, url.pattern, url.view)
@@ -24,8 +28,6 @@ async def serve_task():
         app.make_handler(),
         host=settings.SITE_ADDR,
         port=settings.SITE_PORT,
-        # reuse_address=False,
-        # reuse_port=False,
     )
 
 
