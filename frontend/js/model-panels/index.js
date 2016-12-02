@@ -6,13 +6,33 @@ function dividerConverter (divider) {
     };
 }
 
-exports.getPanels = function () {
+function roman(value) {
+    var ROMAN_SYMBOLS = {
+        1: 'I',
+        2: 'II',
+        3: 'III',
+        4: 'IV',
+        5: 'V',
+        6: 'VI',
+        7: 'VII',
+        8: 'VIII',
+        9: 'IX',
+        10: 'X',
+    }
+    return ROMAN_SYMBOLS[value];
+}
+
+exports.getPanels = function (ids) {
     return [
+        new Panel('Загальне', {
+            price: 'Ціна, грн',
+            year: 'Рік випуску',
+        }, ids),
         new Panel('Кузов', {
             body_type: 'Тип кузова',
             doors: 'Кількість дверей',
             seats: 'Кількість місць'
-        }),
+        }, ids),
         new Panel('Габарити та маса ', {
             length: 'Довжина, мм',
             width: 'Ширина, мм',
@@ -24,7 +44,7 @@ exports.getPanels = function () {
             fuel_tank_volume: 'Об\'єм паливного бака, л',
             wheel_base: 'Колісна база, мм',
             bearing_capacity: 'Вантажопідйомність, кг'
-        }),
+        }, ids),
         new Panel('Двигун', {
             engine_position: 'Положення',
             energy_source: 'Паливо',
@@ -52,23 +72,79 @@ exports.getPanels = function () {
             engine_valves_count: 'Кількість клапанів',
             // @TODO: 'Наявність компресора',
             engine_co2_emission: 'Викид CO2, г/км',
-            engine_euro_toxicity_norms: 'Норми токсичностi EURO'
-        }),
+            engine_euro_toxicity_norms: {
+                title: 'Норми токсичностi EURO',
+                converter: roman
+            }
+        }, ids),
         new Panel('Трансмісія', {
             gearbox_type: 'Коробка передач',
             gears_count: 'Кількість передач',
             drive_type: 'Тип приводу'
-        }),
+        }, ids),
         new Panel('Кермо', {
             steer_amplifier: 'Підсилювач керма',
-            spread_diameter: 'Діаметр розвороту, м'
-        }),
+            spread_diameter: {
+                title: 'Діаметр розвороту, м',
+                converter: dividerConverter(100),
+            }
+        }, ids),
         new Panel('Динамічні характеристики', {
             max_velocity: 'Максимальна швидкість, км/год',
             acceleration_time_to_100: {
                 title: 'Час розгону до 100 км/год, с',
                 converter: dividerConverter(1000),
             }
-        })
+        }, ids)
     ];
 };
+
+exports.withFullfilledPanels = function (ids, resourceModel, callback) {
+    var singleItemModel = !angular.isArray(ids)
+
+    if (singleItemModel) {
+        ids = [ids];
+    }
+
+    var dataIndex = {};
+    var panels = exports.getPanels(ids);
+    var loadedModelsCount = 0;
+
+
+    var callCallbackWithData = function () {
+        var modelsData;
+
+        if (singleItemModel) {
+            var id = ids[0];
+            modelsData = dataIndex[id];
+        } else {
+            modelsData = ids.map(function (id) {
+                return dataIndex[id];
+            });
+        }
+
+        return callback(modelsData, panels);
+    };
+
+    ids.forEach(function (id) {
+        resourceModel.get({modelId: id}, function (model) {
+            var data = {
+                'model': model,
+                'advertisements': model.advertisements,
+            }
+            dataIndex[id] = data;
+
+            angular.forEach(data.advertisements, function (advertisement) {
+                angular.forEach(panels, function (panel) {
+                    panel.populateData(advertisement, id);
+                });
+            });
+
+            loadedModelsCount++;
+
+            if (loadedModelsCount === ids.length) {
+                callCallbackWithData();
+            }
+        });
+    });
+}

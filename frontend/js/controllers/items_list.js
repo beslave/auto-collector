@@ -2,8 +2,7 @@
 
 var utils = require('../utils');
 
-module.exports = function ($scope, $http, $filter, $window, $location, autoData) {
-    var advertisements = [];
+module.exports = function ($scope, $filter, $window, $location, autoData) {
     var PER_PAGE = 20;
     var SCROLL_THRESHOLD = 250;
     var number = $filter('number');
@@ -60,7 +59,7 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
         var brandsWithAdvertisements = {};
         var model;
 
-        advertisements.forEach(function (adv) {
+        autoData.advertisements.forEach(function (adv) {
             notSatisfiedFilters = notSatisfyFilters(adv);
             isSatisfyFilters = notSatisfiedFilters.length === 0;
             model = autoData.getModel(adv.model_id);
@@ -156,18 +155,6 @@ module.exports = function ($scope, $http, $filter, $window, $location, autoData)
         updateItems();
     }
     $scope.$on('autoDataChanged', resetItems);
-    $http.get('/api/').then(function (response) {
-        var fields = response.data.fields;
-        advertisements = response.data.rows.map(function (row) {
-            var adv = {};
-            row.forEach(function (value, i) {
-                adv[fields[i]] = value;
-            });
-            adv.preview = '/advertisement/' + adv.id + '/preview/'
-            return adv;
-        });
-        resetItems();
-    });
 
     loadExtraItems();
     angular.element($window).bind('scroll', loadExtraItems);

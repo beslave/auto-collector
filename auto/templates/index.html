@@ -2,10 +2,26 @@
 
 {% block content %}
 <div class="container-fluid" ng-controller="ComparisonController">
-    <div class="col-lg-2 col-md-3 col-sm-4 col-xs-12 list-filters-wrapper" ng-controller="ItemsListFiltersController">
-        {% include 'auto/snippets/filters.html' %}
+    <div class="col-lg-2 col-md-3 col-sm-4 col-xs-12 sidebar-wrapper">
+        <div class="sidebar" ng-controller="SidebarController">
+            {% set tabs = [
+                ('Фільтри', 'auto/snippets/filters.html'),
+                ('Порівняння', 'comparison/sidebar.html'),
+            ] %}
+
+            {% for title, template in tabs %}
+                <div class="sidebar-tab">
+                    <div class="sidebar-tab_title">
+                        {{ title }}
+                    </div>
+                    <div class="sidebar-tab_content">
+                        {% include template %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
-    <div class="col-lg-10 col-md-9 col-sm-8 col-xs-12" ng-controller="ItemsListController">
+    <div class="col-lg-10 col-md-9 col-sm-8 col-xs-12">
         {% include 'auto/items_list.html' %}
     </div>
     <div class="modal-container col-lg-10 col-md-9 col-sm-8 col-xs-12" ng-controller="ModalController" ng-view></div>

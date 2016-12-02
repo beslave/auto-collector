@@ -1,5 +1,7 @@
 module.exports = function () {
     var data = {
+        advertisements: [],
+        advertisementsPrimaryIndex: {},
         bodyTypes: [],
         bodyTypesWithAdvertisements: [],
         bodyTypesPrimaryIndex: {},
@@ -9,6 +11,9 @@ module.exports = function () {
         modelsPrimaryIndex: {},
         filters: [],
 
+        getAdvertisement: function (advertisementId) {
+            return this.advertisementsPrimaryIndex[advertisementId];
+        },
         getBodyType: function (bodyTypeId) {
             return this.bodyTypesPrimaryIndex[brandId];
         },
@@ -27,7 +32,22 @@ module.exports = function () {
         });
     };
 
-    this.$get = function ($rootScope, $resource, resourceModels) {
+    this.$get = function ($http, $rootScope, $resource, resourceModels) {
+        $http.get('/api/').then(function (response) {
+            var fields = response.data.fields;
+            data.advertisements = response.data.rows.map(function (row) {
+                var adv = {};
+                row.forEach(function (value, i) {
+                    adv[fields[i]] = value;
+                });
+                adv.preview = '/advertisement/' + adv.id + '/preview/'
+
+                data.advertisementsPrimaryIndex[adv.id] = adv;
+
+                return adv;
+            });
+            $rootScope.$broadcast('autoDataChanged', data);
+        });
         data.bodyTypes = resourceModels.BodyType.query(function (results) {
             syncPrimaryIndex(data.bodyTypes, data.bodyTypesPrimaryIndex, 'id');
             $rootScope.$broadcast('autoDataChanged', data);

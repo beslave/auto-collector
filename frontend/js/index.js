@@ -9,11 +9,9 @@ var providers = require('./providers');
 app.provider('autoData', providers.autoData);
 app.factory('resourceModels', providers.resourceModels);
 
-app.controller('ComparisonController', controllers.ComparisonController);
-app.controller('ItemsListController', controllers.ItemsListController);
-app.controller('ItemsListFiltersController', controllers.ItemsListFiltersController);
-app.controller('ModalController', controllers.ModalController);
-app.controller('ModelController', controllers.ModelController);
+Object.keys(controllers).forEach(function (controllerName) {
+    app.controller(controllerName, controllers[controllerName]);
+});
 
 app.config(function ($resourceProvider, $routeProvider, $locationProvider, $sceDelegateProvider) {
     $resourceProvider.defaults.stripTrailingSlashes = false;
@@ -29,7 +27,6 @@ app.config(function ($resourceProvider, $routeProvider, $locationProvider, $sceD
         window.settings.templatesURL + '**'
     ]);
 
-    // configure html5 to get links working on jsfiddle
     $locationProvider.html5Mode(true);
 });
 

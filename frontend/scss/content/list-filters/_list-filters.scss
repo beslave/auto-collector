@@ -1,13 +1,2 @@
 .list-filters {
-    padding-top: $global-indent / 2;
-
-    @media screen and (min-width: $screen-sm-min) {
-        padding: $global-indent / 2 $global-indent / 2 0;
-        position: fixed;
-        width: inherit;
-
-        &-wrapper {
-            padding: 0;
-        }
-    }
 }

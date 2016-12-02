@@ -5,5 +5,6 @@ module.exports = {
     ItemsListController: require('./items_list'),
     ItemsListFiltersController: require('./items_list_filters'),
     ModalController: require('./modal'),
-    ModelController: require('./model')
+    ModelController: require('./model'),
+    SidebarController: require('./sidebar'),
 };

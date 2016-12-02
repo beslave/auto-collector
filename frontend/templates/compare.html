@@ -5,7 +5,44 @@
     </div>
 
     <div class="modal-body">
-        <table>
+        <table class="table table-condensed table-striped" data-if="comparePanels.length > 0">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th ng-repeat="modelTitle in compareTitles">
+                        {{ modelTitle }}
+                    </th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th ng-repeat="modelPreview in comparePreviews track by $index">
+                        <img ng-if="modelPreview" ng-src="{{ modelPreview }}" width="100%" />
+                    </th>
+                </tr>
+            </thead>
+            <tbody ng-repeat="panel in comparePanels" ng-if="panel.visible()">
+                <tr class="panel-heading expand-arrow"
+                    ng-click="panel.toggleExpand()"
+                    ng-class="{'expand-arrow__collapse': panel.isExpanded}"
+                >
+                    <th colspan="{{ 1 + panel.ids.length }}">
+                        {{ panel.title }}
+                    </th>
+                </tr>
+                <tr ng-repeat="field in panel.fields" ng-if="field.visible()">
+                    <th>{{ field.title }}:</th>
+                    <td class="item" ng-repeat="item in field.items">
+                        <div class="panel-field_values-list" ng-if="item.valuesList.length <= 3">
+                            <span class="panel-field_value" ng-repeat="value in item.valuesList | orderBy">
+                                {{ value }}
+                            </span>
+                        </div>
+                        <div ng-if="item.valuesList.length > 3">
+                            {{ item.getValuesListRange() }}
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
         </table>
     </div>
 

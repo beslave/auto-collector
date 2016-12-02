@@ -1,0 +1,11 @@
+.sidebar-tab {
+    @extend .panel, .panel-default;
+
+    &_title {
+        @extend .panel-heading;
+    }
+
+    &_content {
+        @extend .panel-body;
+    }
+}

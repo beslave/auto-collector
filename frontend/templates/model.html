@@ -18,7 +18,7 @@
                 <div class="panel-field" ng-repeat="field in panel.fields" ng-if="field.visible()">
                     <div class="panel-field_title">{{ field.title }}:</div>
                     <div class="panel-field_values-list">
-                        <span ng-repeat="value in field.valuesList | orderBy"
+                        <span ng-repeat="value in field.first().valuesList | orderBy"
                             class="panel-field_value"
                         >{{ value }}</span>
                     </div>

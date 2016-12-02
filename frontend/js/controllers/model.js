@@ -8,24 +8,13 @@ module.exports = function ($scope, $filter, $routeParams, store, autoData, resou
     $scope.advertisements = [];
     $scope.filteredAdvertisements = [];
 
-    $scope.panels = modelPanels.getPanels();
-    $scope.bodyTypes = [];
-    $scope.doorsCountList = [];
-    $scope.seatsCountList = [];
+    $scope.panels = [];
+    $scope.model = null;
 
-    $scope.model = resourceModels.Model.get({modelId: $routeParams.modelId}, function (model) {
-        $scope.advertisements = model.advertisements;
-
-        var bodyTypesIndex = {};
-        var doorsCountListIndex = {};
-        var seatsCountListIndex = {};
-
-        angular.forEach($scope.advertisements, function (advertisement) {
-            angular.forEach($scope.panels, function (panel) {
-                panel.populateData(advertisement);
-            });
-        });
-
+    modelPanels.withFullfilledPanels($routeParams.modelId, resourceModels.Model, function (modelData, panels) {
+        $scope.model = modelData.model;
+        $scope.advertisements = modelData.advertisements;
+        $scope.panels = panels;
         updateFilters();
     });
 
@@ -78,6 +67,10 @@ module.exports = function ($scope, $filter, $routeParams, store, autoData, resou
         }
 
         $scope.filteredAdvertisements = filtered;
+
+        $scope.panels.forEach(function (panel) {
+            panel.applyFilters(autoData.filters);
+        });
         $scope.$applyAsync();
     }
 
