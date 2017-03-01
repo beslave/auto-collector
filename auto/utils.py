@@ -44,7 +44,7 @@ def parse_interval_depended(value):
     return value, start, end
 
 
-def parse_float_to_int(value, multiplier):
+def parse_float_to_int(value, multiplier=1):
     if not value:
         return value
 
