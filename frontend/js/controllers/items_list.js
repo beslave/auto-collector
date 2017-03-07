@@ -29,6 +29,7 @@ module.exports = function ($scope, $filter, $window, $location, autoData) {
         var brandId = brand && brand.id;
         var filterBrandId = autoData.filters.brand && autoData.filters.brand.id;
         var filterBodyTypeId = autoData.filters.bodyType && autoData.filters.bodyType.id;
+        var filterEnergySourceId = autoData.filters.energySource && autoData.filters.energySource.id;
 
         if (!autoData.filters.isNew && adv.is_new) {
             notSatisfy.push('isNew');
@@ -48,6 +49,9 @@ module.exports = function ($scope, $filter, $window, $location, autoData) {
         if (autoData.filters.bodyType && !angular.equals(filterBodyTypeId, adv.body_type_id)) {
             notSatisfy.push('bodyType');
         }
+        if (autoData.filters.energySource && !angular.equals(filterEnergySourceId, adv.energy_source_id)) {
+            notSatisfy.push('energySource');
+        }
         return notSatisfy;
     };
 
@@ -57,6 +61,7 @@ module.exports = function ($scope, $filter, $window, $location, autoData) {
         var grouped_items = {};
         var bodyTypesWithAdvertisements = {};
         var brandsWithAdvertisements = {};
+        var energySourcesWithAdvertisements = {};
         var model;
 
         autoData.advertisements.forEach(function (adv) {
@@ -71,6 +76,10 @@ module.exports = function ($scope, $filter, $window, $location, autoData) {
 
             if (hasAdvertisements('bodyType')) {
                 bodyTypesWithAdvertisements[adv.body_type_id] = true;
+            }
+
+            if (hasAdvertisements('energySource')) {
+                energySourcesWithAdvertisements[adv.energy_source_id] = true;
             }
 
             if (model && hasAdvertisements('brand')) {
@@ -127,6 +136,9 @@ module.exports = function ($scope, $filter, $window, $location, autoData) {
         });
         autoData.brandsWithAdvertisements = autoData.brands.filter(function (brand) {
             return brand.id in brandsWithAdvertisements;
+        });
+        autoData.energySourcesWithAdvertisements = autoData.energySources.filter(function (energySource) {
+            return energySource.id in energySourcesWithAdvertisements;
         });
 
         loadExtraItems();

@@ -47,8 +47,6 @@ class AutoDataView(BaseApiView):
     table = models.Advertisement.__table__
     body_table = models.Body.__table__
 
-    PER_PAGE = 50
-
     async def get_json(self):
         fields = [
             'id',
@@ -61,11 +59,17 @@ class AutoDataView(BaseApiView):
             self.body_table,
             self.table.c.complectation_id == self.body_table.c.complectation_id,
             isouter=True,
+        ).join(
+            models.Engine.__table__,
+            models.Engine.__table__.c.complectation_id == self.table.c.complectation_id,
+            isouter=True,
         )
+
         select_fields = [
             getattr(self.table.c, f) for f in fields
         ] + [
             self.body_table.c.body_type_id,
+            models.Engine.__table__.c.energy_source_id,
         ]
 
         rows = await self.request.connection.execute(
@@ -80,7 +84,7 @@ class AutoDataView(BaseApiView):
             rows_data.append(row.as_tuple())
 
         return {
-            'fields': fields + ['body_type_id'],
+            'fields': fields + ['body_type_id', 'energy_source_id'],
             'rows': rows_data,
         }
 
@@ -132,6 +136,7 @@ class ModelView(BaseApiView):
             models.Dimensions.__table__.c.wheel_base,
             models.Dimensions.__table__.c.bearing_capacity,
             models.EnginePosition.__table__.c.name,
+            models.EnergySource.__table__.c.id,
             models.EnergySource.__table__.c.name,
             models.Engine.__table__.c.volume,
             models.Engine.__table__.c.cylinders,
@@ -248,6 +253,7 @@ class ModelView(BaseApiView):
             'wheel_base',
             'bearing_capacity',
             'engine_position',
+            'energy_source_id',
             'energy_source',
             'engine_volume',
             'engine_cylinders',
@@ -316,6 +322,11 @@ class ModelListView(ApiListView):
 
 class BodyTypeListView(ApiListView):
     table = models.BodyType.__table__
+    order_by = 'name'
+
+
+class EnergySourceListView(ApiListView):
+    table = models.EnergySource.__table__
     order_by = 'name'
 
 

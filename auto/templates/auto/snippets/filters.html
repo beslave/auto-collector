@@ -23,13 +23,23 @@
     </div>
 
     <div class="form-group">
-        <label for="brandFilter">Кузов</label>
-        <select id="brandFilter" class="form-control"
+        <label for="bodyTypeFilter">Кузов</label>
+        <select id="bodyTypeFilter" class="form-control"
             ng-options="bodyType.name for bodyType in autoData.bodyTypesWithAdvertisements track by bodyType.id"
             ng-model="autoData.filters.bodyType"
             ng-change="updateFilters('bodyType')"
         >
             <option value="">Будь-який</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="energySourceFilter">Пальне</label>
+        <select id="energySourceFilter" class="form-control"
+            ng-options="energySource.name for energySource in autoData.energySourcesWithAdvertisements track by energySource.id"
+            ng-model="autoData.filters.energySource"
+            ng-change="updateFilters('energySource')"
+        >
+            <option value="">Будь-яке</option>
         </select>
     </div>
     <div class="form-group">

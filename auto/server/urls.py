@@ -14,7 +14,6 @@ class Url:
         elif method is None:
             self.method = 'GET'
 
-
     def get_view(self, view):
         if isinstance(view, str):
             view = getattr(views, view)
@@ -33,5 +32,6 @@ url_patterns = [
     Url(r'/api/brands/', 'BrandListView'),
     Url(r'/api/models/', 'ModelListView'),
     Url(r'/api/body-types/', 'BodyTypeListView'),
+    Url(r'/api/energy-sources/', 'EnergySourceListView'),
     Url(r'/api/models/{pk:\d+}/', 'ModelView'),
 ]

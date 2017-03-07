@@ -84,6 +84,12 @@ module.exports = function (title, fields, ids) {
         filteredDataStorage[id] = [];
     });
 
+    var sortingFunc = function (a, b) {
+        if (a > b) return 1;
+        if (a < b) return -1;
+        return 0;
+    };
+
     angular.forEach(fields, function (fieldOptions, field) {
         if (angular.isString(fieldOptions)) {
             fieldOptions = {
@@ -105,7 +111,7 @@ module.exports = function (title, fields, ids) {
                         return this.valuesList.length > 0;
                     },
                     getValuesListRange: function () {
-                        var sortedValues = this.valuesList.slice().sort();
+                        var sortedValues = this.valuesList.slice().sort(sortingFunc);
                         var lastIndex = sortedValues.length - 1;
 
                         return '' + sortedValues[0] + ' - ' + sortedValues[lastIndex];

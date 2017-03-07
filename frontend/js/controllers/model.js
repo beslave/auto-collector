@@ -54,6 +54,12 @@ module.exports = function ($scope, $filter, $routeParams, store, autoData, resou
             });
         }
 
+        if (autoData.filters.energySource) {
+            filtered = $filter('filter')(filtered, {
+                energy_source_id: autoData.filters.energySource.id
+            });
+        }
+
         if (autoData.filters.yearFrom) {
             filtered = filtered.filter(function (adv) {
                 return adv.year >= autoData.filters.yearFrom;

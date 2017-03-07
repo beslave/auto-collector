@@ -6,6 +6,7 @@ module.exports = function ($scope, $rootScope, $filter, $resource, store, autoDa
     autoData.filters = store.get(STORE_KEY) || {
         bodyType: null,
         brand: null,
+        energySource: null,
         yearFrom: null,
         yearTo: null,
         isNew: true,

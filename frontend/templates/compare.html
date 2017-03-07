@@ -9,14 +9,22 @@
             <thead>
                 <tr>
                     <th></th>
-                    <th ng-repeat="modelTitle in compareTitles">
-                        {{ modelTitle }}
+                    <th ng-repeat="modelId in compared track by $index">
+                        <a ng-href="{{ getModelUrl(modelId) }}">{{ getModelTitle(modelId) }}</a>
                     </th>
                 </tr>
                 <tr>
                     <th></th>
-                    <th ng-repeat="modelPreview in comparePreviews track by $index">
-                        <img ng-if="modelPreview" ng-src="{{ modelPreview }}" width="100%" />
+                    <th ng-repeat="modelId in compared track by $index">
+                        <a href="#" ng-click="toggleCompareState(modelId, $event)">
+                            X
+                        </a>
+                    </th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th ng-repeat="modelId in compared track by $index">
+                        <img ng-if="getModelPreview(modelId)" ng-src="{{ getModelPreview(modelId) }}" width="100%" />
                     </th>
                 </tr>
             </thead>

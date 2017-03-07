@@ -7,6 +7,10 @@ module.exports = function () {
         bodyTypesPrimaryIndex: {},
         brands: [],
         brandsPrimaryIndex: {},
+        brandsWithAdvertisements: [],
+        energySources: [],
+        energySourcesPrimaryIndex: {},
+        energySourcesWithAdvertisements: [],
         models: [],
         modelsPrimaryIndex: {},
         filters: [],
@@ -22,6 +26,9 @@ module.exports = function () {
         },
         getModel: function (modelId) {
             return this.modelsPrimaryIndex[modelId];
+        },
+        getEnergySource: function (energySourceId) {
+            return this.energySourcesPrimaryIndex[energySourcesPrimaryIndex];
         }
     };
 
@@ -61,6 +68,10 @@ module.exports = function () {
                 $rootScope.$broadcast('autoDataChanged', data);
             });
             syncPrimaryIndex(data.brands, data.brandsPrimaryIndex, 'id');
+        });
+        data.energySources = resourceModels.EnergySource.query(function (results) {
+            syncPrimaryIndex(data.energySources, data.energySourcesPrimaryIndex, 'id');
+            $rootScope.$broadcast('autoDataChanged', data);
         });
         return data;
     };
