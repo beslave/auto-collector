@@ -48,6 +48,14 @@ module.exports = function (title, fields, ids) {
                     return;
                 }
 
+                if (filters.energySource && filters.energySource.id !== data.energy_source_id) {
+                    return;
+                }
+
+                if (filters.bodyType && filters.bodyType.id !== data.body_type_id) {
+                    return;
+                }
+
                 filteredDataStorage[itemId].push(data);
 
                 this.fields.forEach(function (field) {
