@@ -2,6 +2,9 @@ module.exports = function () {
     var data = {
         advertisements: [],
         advertisementsPrimaryIndex: {},
+        states: [],
+        statesWithAdvertisements: [],
+        statesPrimaryIndex: {},
         bodyTypes: [],
         bodyTypesWithAdvertisements: [],
         bodyTypesPrimaryIndex: {},
@@ -17,6 +20,9 @@ module.exports = function () {
 
         getAdvertisement: function (advertisementId) {
             return this.advertisementsPrimaryIndex[advertisementId];
+        },
+        getState: function (stateId) {
+            return this.statesPrimaryIndex[stateId];
         },
         getBodyType: function (bodyTypeId) {
             return this.bodyTypesPrimaryIndex[brandId];
@@ -54,6 +60,9 @@ module.exports = function () {
                 return adv;
             });
             $rootScope.$broadcast('autoDataChanged', data);
+        });
+        data.states = resourceModels.State.query(function (results) {
+            syncPrimaryIndex(data.states, data.statesPrimaryIndex, 'id');
         });
         data.bodyTypes = resourceModels.BodyType.query(function (results) {
             syncPrimaryIndex(data.bodyTypes, data.bodyTypesPrimaryIndex, 'id');

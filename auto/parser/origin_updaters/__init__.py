@@ -14,6 +14,7 @@ from auto.parser.origin_updaters.engine_position import OriginEnginePositionUpda
 from auto.parser.origin_updaters.engine_power import OriginEnginePowerUpdater
 from auto.parser.origin_updaters.gearbox_type import OriginGearboxTypeUpdater
 from auto.parser.origin_updaters.model import OriginModelUpdater
+from auto.parser.origin_updaters.state import OriginStateUpdater
 from auto.parser.origin_updaters.steer_amplifier import OriginSteerAmplifierUpdater
 from auto.parser.origin_updaters.steering import OriginSteeringUpdater
 from auto.parser.origin_updaters.transmission import OriginTransmissionUpdater

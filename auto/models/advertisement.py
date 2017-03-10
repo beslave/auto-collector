@@ -10,6 +10,7 @@ class BaseAdvertisement:
 
     model_id = sa.Column(sa.Integer, nullable=False)
     complectation_id = sa.Column(sa.Integer, nullable=True)
+    state_id = sa.Column(sa.Integer, nullable=True)
 
     name = sa.Column(sa.String)
     is_new = sa.Column(sa.Boolean)
@@ -24,6 +25,7 @@ class Advertisement(BaseAdvertisement, Base):
     __table_args__ = (
         sa.PrimaryKeyConstraint('id'),
         sa.ForeignKeyConstraint(['complectation_id'], ['auto_complectation.id']),
+        sa.ForeignKeyConstraint(['state_id'], ['auto_state.id']),
         sa.ForeignKeyConstraint(['model_id'], ['auto_model.id']),
     )
 
@@ -40,6 +42,11 @@ class OriginAdvertisement(BaseAdvertisement, WithOrigin(Advertisement), Base):
         sa.ForeignKeyConstraint(
             ['complectation_id', 'origin'],
             ['auto_origincomplectation.id', 'auto_origincomplectation.origin'],
+            onupdate='CASCADE', ondelete='SET NULL',
+        ),
+        sa.ForeignKeyConstraint(
+            ['state_id', 'origin'],
+            ['auto_originstate.id', 'auto_originstate.origin'],
             onupdate='CASCADE', ondelete='SET NULL',
         ),
     )

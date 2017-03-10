@@ -52,6 +52,9 @@ module.exports = function ($scope, $filter, $window, $location, autoData) {
         if (autoData.filters.energySource && !angular.equals(filterEnergySourceId, adv.energy_source_id)) {
             notSatisfy.push('energySource');
         }
+        if (autoData.filters.state && autoData.filters.state.id !== adv.state_id) {
+            notSatisfy.push('state');
+        }
         return notSatisfy;
     };
 
@@ -59,6 +62,7 @@ module.exports = function ($scope, $filter, $window, $location, autoData) {
         var isSatisfyFilters;
         var notSatisfiedFilters;
         var grouped_items = {};
+        var statesWithAdvertisements = {};
         var bodyTypesWithAdvertisements = {};
         var brandsWithAdvertisements = {};
         var energySourcesWithAdvertisements = {};
@@ -73,6 +77,10 @@ module.exports = function ($scope, $filter, $window, $location, autoData) {
                 var onlyCurrentUsed = notSatisfiedFilters.length === 1 && notSatisfiedFilters[0] === filterName;
                 return isSatisfyFilters || onlyCurrentUsed;
             };
+
+            if (hasAdvertisements('state')) {
+                statesWithAdvertisements[adv.state_id] = true;
+            }
 
             if (hasAdvertisements('bodyType')) {
                 bodyTypesWithAdvertisements[adv.body_type_id] = true;
@@ -131,6 +139,9 @@ module.exports = function ($scope, $filter, $window, $location, autoData) {
         $scope.filteredItems = $filter('orderBy')($scope.items, 'price_avg');
         $scope.limitedItems = $filter('limitTo')($scope.filteredItems, $scope.showItemsCount);
 
+        autoData.statesWithAdvertisements = autoData.states.filter(function (state) {
+            return state.id in statesWithAdvertisements;
+        });
         autoData.bodyTypesWithAdvertisements = autoData.bodyTypes.filter(function (bodyType) {
             return bodyType.id in bodyTypesWithAdvertisements;
         });

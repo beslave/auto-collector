@@ -54,6 +54,7 @@ class AutoDataView(BaseApiView):
             'year',
             'price',
             'model_id',
+            'state_id',
         ]
         select_from = self.table.join(
             self.body_table,
@@ -70,6 +71,7 @@ class AutoDataView(BaseApiView):
         ] + [
             self.body_table.c.body_type_id,
             models.Engine.__table__.c.energy_source_id,
+
         ]
 
         rows = await self.request.connection.execute(
@@ -84,7 +86,10 @@ class AutoDataView(BaseApiView):
             rows_data.append(row.as_tuple())
 
         return {
-            'fields': fields + ['body_type_id', 'energy_source_id'],
+            'fields': fields + [
+                'body_type_id',
+                'energy_source_id',
+            ],
             'rows': rows_data,
         }
 
@@ -117,6 +122,7 @@ class ModelView(BaseApiView):
             'price',
             'year',
             'preview',
+            'state_id',
         ]
         select_fields = [
             getattr(self.adv_table.c, field) for field in advertisement_fields
@@ -327,6 +333,11 @@ class BodyTypeListView(ApiListView):
 
 class EnergySourceListView(ApiListView):
     table = models.EnergySource.__table__
+    order_by = 'name'
+
+
+class StateListView(ApiListView):
+    table = models.State.__table__
     order_by = 'name'
 
 

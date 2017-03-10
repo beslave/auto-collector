@@ -56,6 +56,10 @@ module.exports = function (title, fields, ids) {
                     return;
                 }
 
+                if (filters.state && filters.state.id !== data.state_id) {
+                    return;
+                }
+
                 filteredDataStorage[itemId].push(data);
 
                 this.fields.forEach(function (field) {

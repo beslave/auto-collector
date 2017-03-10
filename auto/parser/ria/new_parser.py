@@ -69,6 +69,7 @@ class RiaNewParser(BaseRiaParser):
 
         data = {
             'id': list_item_data['id'],
+            'state': api_data.get('state', '').lower(),
             'is_new': True,
             'name': list_item_data['name'],
             'brand': api_data['marka'],

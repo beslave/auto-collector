@@ -4,6 +4,7 @@ var STORE_KEY = 'listFilters';
 
 module.exports = function ($scope, $rootScope, $filter, $resource, store, autoData) {
     autoData.filters = store.get(STORE_KEY) || {
+        state: null,
         bodyType: null,
         brand: null,
         energySource: null,

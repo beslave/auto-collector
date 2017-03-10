@@ -21,3 +21,4 @@ from auto.models.complectation.steering import Steering, OriginSteering
 from auto.models.complectation.transmission import Transmission, OriginTransmission
 
 from auto.models.model import Model, OriginModel
+from auto.models.state import State, OriginState

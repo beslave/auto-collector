@@ -9,6 +9,7 @@ from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
 
 import settings
+import auto.models
 
 from migrations.models_base import Base
 

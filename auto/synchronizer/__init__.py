@@ -22,6 +22,7 @@ from auto.models import (
     GearboxType, OriginGearboxType,
     DriveType, OriginDriveType,
     Transmission, OriginTransmission,
+    State, OriginState,
     SteerAmplifier, OriginSteerAmplifier,
     Steering, OriginSteering,
     DynamicCharacteristics, OriginDynamicCharacteristics,
@@ -31,6 +32,13 @@ from auto.utils import make_db_query
 
 
 logger = logging.getLogger('auto.synchronizer')
+
+
+class StateUpdater(SynchronizerUpdater):
+    table = State.__table__
+    origin_table = OriginState.__table__
+    sync_fields = ['name']
+    comparable_fields = ['name']
 
 
 class BodyTypeUpdater(SynchronizerUpdater):
@@ -299,6 +307,7 @@ class AdvertisementUpdater(SynchronizerUpdater):
         'name',
         'model_id',
         'complectation_id',
+        'state_id',
         'is_new',
         'year',
         'price',
@@ -321,6 +330,7 @@ class AdvertisementUpdater(SynchronizerUpdater):
 
 class Synchronizer:
     updaters_list = [
+        StateUpdater,
         BodyTypeUpdater,
         EnginePositionUpdater,
         EnergySourceUpdater,

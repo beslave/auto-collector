@@ -1,7 +1,6 @@
 import sqlalchemy as sa
 
 from auto.models.base import Base, WithOrigin
-from auto.models.model import Model
 
 
 class BaseComplectation:
@@ -15,7 +14,7 @@ class Complectation(BaseComplectation, Base):
     __table_args__ = (
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('name', 'model_id', name='name_model_uc'),
-        sa.ForeignKeyConstraint(['model_id'], ['auto_nmodel.id']),        
+        sa.ForeignKeyConstraint(['model_id'], ['auto_model.id']),
     )
 
 

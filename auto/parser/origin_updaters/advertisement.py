@@ -18,4 +18,5 @@ class OriginAdvertisementUpdater(UpdateByCreatedAtMixin, UpdaterWithDatesMixin, 
     field_dependencies = {
         'model_id': 'model.id',
         'complectation_id': 'complectation.id',
+        'state_id': 'state.id',
     }

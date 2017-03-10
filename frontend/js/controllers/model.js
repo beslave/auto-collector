@@ -48,6 +48,12 @@ module.exports = function ($scope, $filter, $routeParams, store, autoData, resou
             filtered = $filter('filter')(filtered, {is_new: true});
         }
 
+        if (autoData.filters.state) {
+            filtered = $filter('filter')(filtered, {
+                state_id: autoData.filters.state.id
+            });
+        }
+
         if (autoData.filters.bodyType) {
             filtered = $filter('filter')(filtered, {
                 body_type_id: autoData.filters.bodyType.id

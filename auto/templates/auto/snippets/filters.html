@@ -23,6 +23,16 @@
     </div>
 
     <div class="form-group">
+        <label for="stateFilter">Регіон</label>
+        <select id="stateFilter" class="form-control"
+            ng-options="state.name for state in autoData.statesWithAdvertisements track by state.id"
+            ng-model="autoData.filters.state"
+            ng-change="updateFilters('state')"
+        >
+            <option value="">Будь-який</option>
+        </select>
+    </div>
+    <div class="form-group">
         <label for="bodyTypeFilter">Кузов</label>
         <select id="bodyTypeFilter" class="form-control"
             ng-options="bodyType.name for bodyType in autoData.bodyTypesWithAdvertisements track by bodyType.id"

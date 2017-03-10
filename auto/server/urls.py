@@ -33,5 +33,6 @@ url_patterns = [
     Url(r'/api/models/', 'ModelListView'),
     Url(r'/api/body-types/', 'BodyTypeListView'),
     Url(r'/api/energy-sources/', 'EnergySourceListView'),
+    Url(r'/api/states/', 'StateListView'),
     Url(r'/api/models/{pk:\d+}/', 'ModelView'),
 ]
